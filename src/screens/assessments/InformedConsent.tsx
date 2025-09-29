@@ -375,13 +375,13 @@ export default function InformedConsentForm({
     /* ============================ UI ============================ */
     return (
         <KeyboardAvoidingView
-             style={{ flex: 1 }}
-             behavior={Platform.OS === "ios" ? "padding" : "height"}
-             keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
-           >
+            style={{ flex: 1 }}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+        >
             <View className="px-4 pb-1" style={{ paddingTop: 8 }}>
 
-          <View className="bg-white border-b-2 border-gray-300 rounded-xl p-6 flex-row justify-between items-center shadow-sm">
+                <View className="bg-white border-b-2 border-gray-300 rounded-xl p-6 flex-row justify-between items-center shadow-sm">
                     <Text className="text-lg font-bold text-green-600">
                         Participant ID: {patientId}
                     </Text>
@@ -601,7 +601,7 @@ export default function InformedConsentForm({
                                 dateValue={signatures.subjectDate}
                                 onChangeDate={(v) => setSig("subjectDate", v)}
                             />
-                         
+
 
 
                             <SignatureBlock
@@ -726,6 +726,9 @@ type SignatureBlockProps = {
     onChangeSignature: (v: string) => void;
 };
 
+import { TouchableOpacity } from 'react-native';
+import SignatureModal from '@components/SignaturePad';
+
 export function SignatureBlock({
     title,
     nameLabel,
@@ -740,62 +743,57 @@ export function SignatureBlock({
     const [nameError, setNameError] = useState(!!error?.subjectName);
     const [sigError, setSigError] = useState(!!error?.subjectSignaturePad);
 
-    // Hide name error when user types
+    // Show/hide errors dynamically
     useEffect(() => {
-        if (nameValue && nameValue.trim() !== "") {
-            setNameError(false);
-        } else if (error?.subjectName) {
-            setNameError(true);
-        }
+        setNameError(!!(error?.subjectName && !nameValue?.trim()));
     }, [nameValue, error?.subjectName]);
 
-    // Hide signature error when user signs
     useEffect(() => {
-        if (signatureValue && signatureValue.trim() !== "") {
-            setSigError(false);
-        } else if (error?.subjectSignaturePad) {
-            setSigError(true);
-        }
+        setSigError(!!(error?.subjectSignaturePad && !signatureValue?.trim()));
     }, [signatureValue, error?.subjectSignaturePad]);
+
+    const [modalVisible, setModalVisible] = useState(false);
 
     return (
         <View className="flex-1 bg-white border border-[#e6eeeb] rounded-2xl p-4">
-            {/* Title */}
-            <Text
-                className={`text-md font-medium mb-3 ${sigError ? "text-red-500" : "text-[#2c4a43]"
-                    }`}
-            >
+            <Text className={`text-md font-medium mb-3 ${sigError ? "text-red-500" : "text-[#2c4a43]"}`}>
                 {title}
             </Text>
 
-            {/* Signature pad */}
-            <View
-                className={`border-2 border-dashed rounded-lg min-h-[96px] mb-3 bg-[#fafdfb] border-[#cfe0db]
-        }`}
+            {/* Signature area */}
+            <TouchableOpacity
+                onPress={() => setModalVisible(true)}
+                style={{
+                    minHeight: 96,
+                    borderWidth: 2,
+                    borderColor: "#cfe0db",
+                    borderStyle: "dashed",
+                    borderRadius: 12,
+                    backgroundColor: "#fafdfb",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    marginBottom: 12,
+                }}
             >
-                <TextInput
-                    value={signatureValue}
-                    onChangeText={onChangeSignature}
-                    placeholder="Signature Area"
-                    placeholderTextColor="#90a29d"
-                    style={{
-                        flex: 1,
-                        textAlign: "center",
-                        padding: 10,
-                        fontSize: 16,
-                        color: "#0b1f1c",
-                    }}
-                />
-            </View>
+                <Text style={{ color: signatureValue ? "#0b1f1c" : "#90a29d" }}>
+                    {signatureValue ? "✓ Signature Added" : "Tap to Sign"}
+                </Text>
+            </TouchableOpacity>
+
+            {/* Modal for drawing signature */}
+            <SignatureModal
+                label={title}
+                visible={modalVisible}
+                onClose={() => setModalVisible(false)}
+                signatureData={signatureValue}
+                setSignatureData={onChangeSignature}
+            />
 
             {/* Name + Date */}
             <View className="flex-row space-x-3">
                 {/* Name */}
                 <View className="flex-[0.8]">
-                    <Text
-                        className={`text-md font-base mb-2 ${nameError ? "text-red-500" : "text-[#2c4a43]"
-                            }`}
-                    >
+                    <Text className={`text-md font-base mb-2 ${nameError ? "text-red-500" : "text-[#2c4a43]"}`}>
                         {nameLabel}
                     </Text>
                     <TextInput
@@ -805,22 +803,18 @@ export function SignatureBlock({
                         placeholderTextColor="#9ca3af"
                         className={`text-sm text-[#0b1f1c] border rounded-xl px-3 py-2 border-[#dce9e4]
                         }`}
-                        style={{ lineHeight: 30.4 }} 
+                        style={{ lineHeight: 30.4 }}
                     />
                 </View>
 
                 {/* Date */}
                 <View className="flex-[0.8]">
-                  
-                        <DateField
-                            label="Date"
-                            value={dateValue}
-                            onChange={onChangeDate}
-                            mode="date"
-                            // placeholder="dd/mm/yyyy"
-                        />
-
-                    {/* </View> */}
+                    <DateField
+                        label="Date"
+                        value={dateValue}
+                        onChange={onChangeDate}
+                        mode="date"
+                    />
                 </View>
             </View>
         </View>

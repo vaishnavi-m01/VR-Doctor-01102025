@@ -24,6 +24,7 @@ import { KeyboardAvoidingView } from 'react-native';
 import { Platform } from 'react-native';
 import { ActivityIndicator } from 'react-native';
 import { format, formatForDB } from 'src/utils/date';
+import SignatureModal from '@components/SignaturePad';
 
 
 
@@ -165,6 +166,13 @@ export default function AdverseEventForm() {
     const [selectedSession, setSelectedSession] = useState<string>("No session");
     const [showSessionDropdown, setShowSessionDropdown] = useState(false);
 
+    const [modalVisible, setModalVisible] = useState(false);
+    const [activeSignature, setActiveSignature] = useState<{
+        label: string;
+        value: string;
+        setValue: React.Dispatch<React.SetStateAction<string>>;
+    } | null>(null);
+
 
 
     useEffect(() => {
@@ -218,7 +226,7 @@ export default function AdverseEventForm() {
             console.log('Randomization ID API response:', response.data);
             const data = response.data?.ResponseData;
             console.log('Randomization ID data:', data);
-            
+
             if (data && data.GroupTypeNumber) {
                 console.log('Setting randomization ID:', data.GroupTypeNumber);
                 setRandomizationId(data.GroupTypeNumber);
@@ -901,7 +909,7 @@ export default function AdverseEventForm() {
 
 
                     {/* Divider */}
-                    <View className="h-px bg-gray-200 my-4 mb-4"/>
+                    <View className="h-px bg-gray-200 my-4 mb-4" />
 
                     {/* Outcome of AE */}
                     <Text
@@ -1028,7 +1036,37 @@ export default function AdverseEventForm() {
                             <DateField label="Follow-up visit date" value={followUpDate} onChange={setFollowUpDate} />
                         </View>
                         <View className="flex-1">
-                            <Field label="signature of Investigator" placeholder="Sign/name" value={investigatorSignature} onChangeText={setInvestigatorSignature} error={errors?.investigatorSignature} />
+                            {/* <Field label="signature of Investigator" placeholder="Sign/name" value={investigatorSignature} onChangeText={setInvestigatorSignature} error={errors?.investigatorSignature} /> */}
+
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setActiveSignature({
+                                        label: "Signature of Investigator",
+                                        value: investigatorSignature ?? "",
+                                        setValue: setInvestigatorSignature ,
+                                    });
+                                    setModalVisible(true);
+                                }}
+                            >
+                                <Field
+                                    label="Signature of Investigator"
+                                    placeholder="Sign/name"
+                                    value={investigatorSignature ? "Added" : ""}
+                                    editable={false}
+                                    error={errors?.investigatorSignature}
+                                />
+                            </TouchableOpacity>
+                            {activeSignature && (
+                                <SignatureModal
+                                    label={activeSignature.label}
+                                    visible={modalVisible}
+                                    onClose={() => setModalVisible(false)}
+                                    signatureData={activeSignature.value}
+                                    setSignatureData={activeSignature.setValue}
+                                />
+                            )}
+
+
                         </View>
                     </View>
 

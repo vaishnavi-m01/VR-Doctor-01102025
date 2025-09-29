@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, RefreshControl, Alert } from 'react-native';
+import { View, Text } from 'react-native';
 import { useParticipants } from '../hooks/useParticipants';
 import { ParticipantFilters } from '../services/participantService';
 import { Participant } from '../services/participantService';

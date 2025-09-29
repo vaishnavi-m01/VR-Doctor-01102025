@@ -15,6 +15,7 @@ import { DropdownField } from '@components/DropdownField';
 import { formatForDB, formatForUI } from 'src/utils/date';
 import { KeyboardAvoidingView, Platform } from 'react-native';
 import { TouchableOpacity } from 'react-native';
+import SignatureModal from '@components/SignaturePad';
 
 
 
@@ -125,7 +126,7 @@ export default function SocioDemographic() {
   const [KnowledgeIn, setKnowledgeIn] = useState<string>("");
 
   // Medical History fields
-  const [cancerTypes, setCancerTypes] = useState<CancerTypes[]>([]);
+  const [_cancerTypes, setCancerTypes] = useState<CancerTypes[]>([]);
   const [cancerTypeOptions, setCancerTypeOptions] = useState<DropdownOption[]>([]);
   const [cancerDiagnosis, setCancerDiagnosis] = useState("");
   console.log("cancerDiagnosis", cancerDiagnosis)
@@ -146,7 +147,7 @@ export default function SocioDemographic() {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [habitErrors, setHabitErrors] = useState<{ [habitId: string]: string }>({});
 
-  const [groupType, setGroupType] = useState("");
+  const [_groupType, setGroupType] = useState("");
   const [groupTypeNumber, setGroupTypeNumber] = useState("");
 
   const route = useRoute<RouteProp<RootStackParamList, 'SocioDemographic'>>();
@@ -155,6 +156,9 @@ export default function SocioDemographic() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [consentGiven, setConsentGiven] = useState(false);
   const [consentError, setConsentError] = useState(false);
+
+  const [modalVisible, setModalVisible] = useState(false);
+
 
 
 
@@ -918,60 +922,60 @@ export default function SocioDemographic() {
             </View>
 
             {/* Question 6 */}
-              <View className="mt-4">
-                <Text
-                  className={`text-base font-medium mb-4 ${errors.practiceReligion ? "text-red-500" : "text-[#2c4a43]"
-                    }`}
-                >
-                  7. Do you practice any religion?
-                </Text>
-              </View>
-              <View className="flex-row gap-3">
-                <Pressable
-                  onPress={() => {
-                    setPracticeReligion("Yes");
-                    setErrors((prev) => ({ ...prev, practiceReligion: "" }));
-                  }}
-                  className={`flex-1 flex-row items-center justify-center rounded-full py-4 px-4  ${practiceReligion === "Yes" ? "bg-[#4FC264]" : "bg-[#EBF6D6]"
-                    }`}
-                >
-                  <Text
-                    className={`font-medium text-base ${practiceReligion === "Yes" ? "text-white" : "text-[#2c4a43]"
-                      }`}
-                  >
-                    Yes
-                  </Text>
-                </Pressable>
-
-                <Pressable
-                  onPress={() => {
-                    setPracticeReligion("No");
-                    setErrors((prev) => ({ ...prev, practiceReligion: "" }));
-                  }}
-                  className={`flex-1 flex-row items-center justify-center rounded-full py-4 px-4 ${practiceReligion === "No" ? "bg-[#4FC264]" : "bg-[#EBF6D6]"
-                    }`}
-                >
-                  <Text
-                    className={`font-medium text-base ${practiceReligion === "No" ? "text-white" : "text-[#2c4a43]"
-                      }`}
-                  >
-                    No
-                  </Text>
-                </Pressable>
-              </View>
-
-              {/* Optional Input when Yes */}
-              {practiceReligion === "Yes" && (
-                <View className="mt-4">
-                  <Field
-                    label="Please specify (Optional)"
-                    placeholder="__________________"
-                    value={religionSpecify}
-                    onChangeText={setReligionSpecify}
-                  />
-                </View>
-              )}
+            <View className="mt-4">
+              <Text
+                className={`text-base font-medium mb-4 ${errors.practiceReligion ? "text-red-500" : "text-[#2c4a43]"
+                  }`}
+              >
+                7. Do you practice any religion?
+              </Text>
             </View>
+            <View className="flex-row gap-3">
+              <Pressable
+                onPress={() => {
+                  setPracticeReligion("Yes");
+                  setErrors((prev) => ({ ...prev, practiceReligion: "" }));
+                }}
+                className={`flex-1 flex-row items-center justify-center rounded-full py-4 px-4  ${practiceReligion === "Yes" ? "bg-[#4FC264]" : "bg-[#EBF6D6]"
+                  }`}
+              >
+                <Text
+                  className={`font-medium text-base ${practiceReligion === "Yes" ? "text-white" : "text-[#2c4a43]"
+                    }`}
+                >
+                  Yes
+                </Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() => {
+                  setPracticeReligion("No");
+                  setErrors((prev) => ({ ...prev, practiceReligion: "" }));
+                }}
+                className={`flex-1 flex-row items-center justify-center rounded-full py-4 px-4 ${practiceReligion === "No" ? "bg-[#4FC264]" : "bg-[#EBF6D6]"
+                  }`}
+              >
+                <Text
+                  className={`font-medium text-base ${practiceReligion === "No" ? "text-white" : "text-[#2c4a43]"
+                    }`}
+                >
+                  No
+                </Text>
+              </Pressable>
+            </View>
+
+            {/* Optional Input when Yes */}
+            {practiceReligion === "Yes" && (
+              <View className="mt-4">
+                <Field
+                  label="Please specify (Optional)"
+                  placeholder="__________________"
+                  value={religionSpecify}
+                  onChangeText={setReligionSpecify}
+                />
+              </View>
+            )}
+          </View>
 
 
 
@@ -1222,12 +1226,30 @@ export default function SocioDemographic() {
 
             {/* Participant Signature */}
             <View className="mt-6">
-              <Field
+              {/* <Field
                 label="1. Participant Signature"
                 placeholder="Enter your name"
                 value={participantSignature}
                 error={errors.participantSignature}
                 onChangeText={setParticipantSignature}
+              /> */}
+              <TouchableOpacity onPress={() => setModalVisible(true)}>
+                <Field
+                  label="1. Participant Signature"
+                  placeholder="Click to add signature"
+                  value={participantSignature}
+                  editable={false}
+                  error={errors.participantSignature}
+                />
+              </TouchableOpacity>
+
+              {/* Signature modal */}
+              <SignatureModal
+                label="Participant Signature"
+                visible={modalVisible}
+                onClose={() => setModalVisible(false)}
+                signatureData={participantSignature}
+                setSignatureData={setParticipantSignature}
               />
             </View>
 

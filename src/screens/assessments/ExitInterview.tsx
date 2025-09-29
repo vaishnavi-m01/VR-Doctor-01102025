@@ -15,6 +15,8 @@ import Toast from 'react-native-toast-message';
 import { UserContext } from 'src/store/context/UserContext';
 import { KeyboardAvoidingView } from 'react-native';
 import { Platform } from 'react-native';
+import { TouchableOpacity } from 'react-native';
+import SignatureModal from '@components/SignaturePad';
 
 interface ExitInterviewOptions {
   OptionId?: string;
@@ -123,6 +125,14 @@ export default function ExitInterview() {
   const [answers, setAnswers] = useState<{ [key: string]: string | string[] }>({});
   const [exitInterviewId, setExitInterviewId] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string | undefined }>({});
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [activeSignature, setActiveSignature] = useState<{
+    label: string;
+    value: string;
+    setValue: React.Dispatch<React.SetStateAction<string>>;
+  } | null>(null);
+
 
   // Fetch questions
   useEffect(() => {
@@ -261,26 +271,26 @@ export default function ExitInterview() {
   const handleValidate = (): boolean => {
     const newErrors: { [key: string]: string } = {};
 
-    Object.entries(groupedQuestions).forEach(([qid, group]) => {
-    if (qid === 'EIQID-2') return; // Skip required validation for VRExperienceRating
+    Object.entries(groupedQuestions).forEach(([qid, _group]) => {
+      if (qid === 'EIQID-2') return; // Skip required validation for VRExperienceRating
 
-    const ans = answers[qid];
-    if (Array.isArray(ans)) {
-      if (ans.length === 0) newErrors[qid] = 'This field is required';
-    } else {
-      if (isEmptyString(ans)) newErrors[qid] = 'This field is required';
-    }
+      const ans = answers[qid];
+      if (Array.isArray(ans)) {
+        if (ans.length === 0) newErrors[qid] = 'This field is required';
+      } else {
+        if (isEmptyString(ans)) newErrors[qid] = 'This field is required';
+      }
 
-    // if (
-    //   group.QuestionText.toLowerCase().includes('reason for discontinuation') &&
-    //   Array.isArray(ans) &&
-    //   ans.includes('Other') &&
-    //   isEmptyString(otherReasonText)
-    // ) 
-    // {
-    //   newErrors.otherReasonText = 'Please specify other reason';
-    // }
-  });
+      // if (
+      //   group.QuestionText.toLowerCase().includes('reason for discontinuation') &&
+      //   Array.isArray(ans) &&
+      //   ans.includes('Other') &&
+      //   isEmptyString(otherReasonText)
+      // ) 
+      // {
+      //   newErrors.otherReasonText = 'Please specify other reason';
+      // }
+    });
 
     // Controlled fields validation
     if (isEmptyString(training)) newErrors.training = 'Training is required';
@@ -409,7 +419,7 @@ export default function ExitInterview() {
     }
   };
 
-    const handleClear = () => {
+  const handleClear = () => {
     setAnswers({});
     setTraining('');
     setTrainingExplain('');
@@ -555,7 +565,7 @@ export default function ExitInterview() {
               <FormCard key={qid} icon="V" title="VR Experience Ratings">
                 <View className="mt-4">
                   <Text className="text-md font-medium  mb-2 text-[#2c4a43]" style={errorLabelStyle(qid)}>
-                
+
                     {group.QuestionText}
 
                   </Text>
@@ -808,7 +818,7 @@ export default function ExitInterview() {
 
         {/* Future Recommendations */}
         <FormCard icon="FR" title="Future Recommendations">
-          <View style={{ flexDirection: 'column', gap: 12,marginTop:6 }}>
+          <View style={{ flexDirection: 'column', gap: 12, marginTop: 6 }}>
             <View style={{ flex: 1 }}>
               <Text className="text-md font-medium text-[#2c4a43]" style={errorLabelStyle('future')}>
                 {questions.find((q) => q.QuestionId === 'EIQID-9')?.QuestionText || ''}
@@ -922,15 +932,39 @@ export default function ExitInterview() {
 
         {/* Acknowledgment & Consent */}
         <FormCard icon="AC" title="Acknowledgment & Consent">
-          <View style={{ flexDirection: 'row', gap: 12,marginTop:6 }}>
+          <View style={{ flexDirection: 'row', gap: 12, marginTop: 6 }}>
             <View style={{ flex: 1 }}>
-              <Field
+
+              {/* <Field
                 label="Participant Signature"
                 placeholder="Participant signature"
                 value={participantName}
                 error={errors.participantSignature}
                 onChangeText={setFieldAndClearError('participantSignature', setParticipantSignature)}
-              />
+              /> */}
+
+
+              <TouchableOpacity
+                onPress={() => {
+                  setActiveSignature({
+                    label: "Participant Signature",
+                    value: participantName,
+                    setValue: setParticipantSignature,
+                  });
+                  setModalVisible(true);
+                }}
+              >
+                <Field
+                  label="Participant Signature"
+                  placeholder="Click to add signature"
+                  // value={participantName ? "Added" : ""}
+                  value={""}
+                  editable={false}
+                  error={errors.participantSignature}
+                />
+              </TouchableOpacity>
+
+
             </View>
             <View style={{ flex: 1 }}>
               <DateField label="Interview CreatedDate" value={participantDate} onChange={setParticipantDate} error={errors.participantDate} />
@@ -939,13 +973,51 @@ export default function ExitInterview() {
           </View>
           <View style={{ flexDirection: 'row', gap: 12, marginTop: 8 }}>
             <View style={{ flex: 1 }}>
-              <Field
+              {/* <Field
                 label="Interviewer Signature (full name)"
                 placeholder="Interviewer full name"
                 value={interviewerSignature}
                 error={errors.interviewerSignature}
                 onChangeText={setFieldAndClearError('interviewerSignature', setInterviewerSignature)}
-              />
+              /> */}
+              {/* <SignatureField
+                label="Interviewer Signature (full name)"
+                error={errors.interviewerSignature}
+                value={interviewerSignature}
+                onChangeText={setFieldAndClearError('interviewerSignature', setInterviewerSignature)}
+              /> */}
+
+              <TouchableOpacity
+                onPress={() => {
+                  setActiveSignature({
+                    label: "Interviewer Signature (full name)",
+                    value: interviewerSignature,
+                    setValue: setInterviewerSignature,
+                  });
+                  setModalVisible(true);
+                }}
+              >
+                <Field
+                  label="Interviewer Signature (full name)"
+                  placeholder="Click to add signature"
+                  // value={interviewerSignature ? "Added" : ""}
+                  value={""}
+                  editable={false}
+                  error={errors.interviewerSignature}
+                />
+              </TouchableOpacity>
+
+              {activeSignature && (
+                <SignatureModal
+                  label={activeSignature.label}
+                  visible={modalVisible}
+                  onClose={() => setModalVisible(false)}
+                  signatureData={activeSignature.value}
+                  setSignatureData={activeSignature.setValue}
+                />
+              )}
+
+
             </View>
             <View style={{ flex: 1 }}>
               <DateField label="Modified Date" value={interviewerDate} onChange={setInterviewerDate} error={errors.interviewerDate} />
@@ -955,6 +1027,34 @@ export default function ExitInterview() {
           <View style={{ height: 150 }} />
         </FormCard>
       </ScrollView>
+
+      {/* <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <View className="bg-white p-5 rounded-xl w-11/12">
+            <SignatureField
+              label="Interviewer Signature"
+              value={interviewerSignature}
+              onChangeText={(val) => {
+                setInterviewerSignature(val);
+                setModalVisible(false); // close modal on save
+              }}
+            />
+
+            <TouchableOpacity
+              onPress={() => setModalVisible(false)}
+              className="bg-gray-300 px-4 py-2 mt-3 rounded-lg"
+            >
+              <Text className="text-center font-medium">Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal> */}
+
 
       <BottomBar>
         <Btn variant="light" onPress={handleValidate}>
