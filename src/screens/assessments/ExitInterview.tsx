@@ -16,7 +16,7 @@ import { UserContext } from 'src/store/context/UserContext';
 import { KeyboardAvoidingView } from 'react-native';
 import { Platform } from 'react-native';
 import { TouchableOpacity } from 'react-native';
-import SignatureModal from '@components/SignaturePad';
+import SignatureModal from '@components/SignatureModal';
 
 interface ExitInterviewOptions {
   OptionId?: string;

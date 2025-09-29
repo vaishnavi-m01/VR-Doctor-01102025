@@ -15,7 +15,7 @@ import { DropdownField } from '@components/DropdownField';
 import { formatForDB, formatForUI } from 'src/utils/date';
 import { KeyboardAvoidingView, Platform } from 'react-native';
 import { TouchableOpacity } from 'react-native';
-import SignatureModal from '@components/SignaturePad';
+import SignatureModal from '@components/SignatureModal';
 
 
 

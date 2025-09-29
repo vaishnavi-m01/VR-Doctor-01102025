@@ -24,7 +24,7 @@ import { KeyboardAvoidingView } from 'react-native';
 import { Platform } from 'react-native';
 import { ActivityIndicator } from 'react-native';
 import { format, formatForDB } from 'src/utils/date';
-import SignatureModal from '@components/SignaturePad';
+import SignatureModal from '@components/SignatureModal';
 
 
 

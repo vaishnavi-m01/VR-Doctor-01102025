@@ -727,7 +727,7 @@ type SignatureBlockProps = {
 };
 
 import { TouchableOpacity } from 'react-native';
-import SignatureModal from '@components/SignaturePad';
+import SignatureModal from '@components/SignatureModal';
 
 export function SignatureBlock({
     title,
