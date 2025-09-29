@@ -45,9 +45,9 @@ interface GetSessionsResponse {
   ResponseData: Session[];
 }
 
-export default function PostVRAssessment() {
+export default function PreVRAssessment() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const route = useRoute<RouteProp<RootStackParamList, 'PostVRAssessment'>>();
+  const route = useRoute<RouteProp<RootStackParamList, 'PreVRAssessment'>>();
 
   const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({});
   const { patientId, age, studyId } = route.params as { patientId: number | string; age: number; studyId: number | string };
@@ -138,8 +138,8 @@ export default function PostVRAssessment() {
         const questionsRes = await apiService.post<{ ResponseData: Question[] }>("/GetPrePostVRSessionQuestionData");
         const fetchedQuestions = questionsRes.data.ResponseData || [];
 
-        // Filter only Post questions
-        const postQuestions = fetchedQuestions.filter(q => q.Type === 'Post');
+        // Filter only Pre questions
+        const preQuestions = fetchedQuestions.filter(q => q.Type === 'Pre');
 
         const responsesRes = await apiService.post<{ ResponseData: Question[] }>("/GetParticipantPrePostVRSessions", {
           ParticipantId: participantIdInput,
@@ -148,7 +148,7 @@ export default function PostVRAssessment() {
         });
         const responseData = responsesRes.data.ResponseData || [];
 
-        const mergedQuestions = postQuestions.map((q) => {
+        const mergedQuestions = preQuestions.map((q) => {
           const resp = responseData.find(r => r.PPVRQMID === q.PPVRQMID);
           return {
             ...q,
@@ -208,12 +208,12 @@ export default function PostVRAssessment() {
     }));
   };
 
-  const postQuestions = questions.sort((a, b) => a.SortKey - b.SortKey);
+  const preQuestions = questions.sort((a, b) => a.SortKey - b.SortKey);
 
   const validateResponses = (): boolean => {
     const newErrors: Record<string, boolean> = {};
 
-    postQuestions.forEach((q) => {
+    preQuestions.forEach((q) => {
       const answer = responses[q.PPVRQMID]?.ScaleValue?.trim();
       if (!answer) {
         newErrors[q.PPVRQMID] = true;
@@ -261,7 +261,7 @@ export default function PostVRAssessment() {
     }
     setSaving(true);
     try {
-      const questionData = postQuestions.map(q => ({
+      const questionData = preQuestions.map(q => ({
         PPPVRId: q.PPPVRId || null,
         QuestionId: q.PPVRQMID,
         ScaleValue: responses[q.PPVRQMID]?.ScaleValue || '',
@@ -278,7 +278,7 @@ export default function PostVRAssessment() {
         QuestionData: questionData,
       };
 
-      console.log("Saving Post VR session payload:", payload);
+      console.log("Saving Pre VR session payload:", payload);
       console.log("Session being saved:", sessionNo);
 
       const isUpdate = questionData.some((q) => q.PPPVRId);
@@ -290,8 +290,8 @@ export default function PostVRAssessment() {
           type: 'success',
           text1: isUpdate ? 'Updated Successfully' : 'Added Successfully',
           text2: isUpdate
-            ? 'Post VR Questionnaires updated successfully!'
-            : 'Post VR Questionnaires added successfully!',
+            ? 'Pre VR Questionnaires updated successfully!'
+            : 'Pre VR Questionnaires added successfully!',
           position: 'top',
           visibilityTime: 1000,
           onHide: () => navigation.goBack(),
@@ -441,7 +441,7 @@ export default function PostVRAssessment() {
       )}
 
       <ScrollView className="flex-1 px-4 bg-bg pb-[400px]" style={{ paddingTop: 5 }} keyboardShouldPersistTaps="handled">
-        <FormCard icon="B" title="Post VR Questionnaires">
+        <FormCard icon="A" title="Pre VR Questionnaires">
           <View style={{ paddingBottom: 40 }}>
             <View className="flex-row gap-3 mt-2">
               <View className="flex-1">
@@ -458,10 +458,10 @@ export default function PostVRAssessment() {
           <Text className="text-red-600 text-center my-2">{validationError}</Text>
         ) : null}
 
-        {/* Display Post questions */}
-        {postQuestions.length > 0 && (
-          <FormCard icon="B" title="Post Virtual Reality Questionnaires">
-            {postQuestions.map((q) => {
+        {/* Display Pre questions */}
+        {preQuestions.length > 0 && (
+          <FormCard icon="A" title="Pre Virtual Reality Questionnaires">
+            {preQuestions.map((q) => {
               const hasError = validationErrors[q.PPVRQMID];
               return (
                 <View key={q.PPVRQMID} className="mb-3 mt-4">
@@ -505,10 +505,10 @@ export default function PostVRAssessment() {
         )}
 
         {/* Show message if no questions */}
-        {postQuestions.length === 0 && (
-          <FormCard icon="ℹ️" title="No Post Questionnaires Available">
+        {preQuestions.length === 0 && (
+          <FormCard icon="ℹ️" title="No Pre Questionnaires Available">
             <Text className="text-gray-600 text-center py-4">
-              No Post Virtual Reality questionnaires are available at this time.
+              No Pre Virtual Reality questionnaires are available at this time.
             </Text>
           </FormCard>
         )}

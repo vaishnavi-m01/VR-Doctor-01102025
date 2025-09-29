@@ -17,6 +17,12 @@ const VRTab: React.FC<VRProps> = ({ patientId,age,studyId }) => {
     return (
         <ScrollView className="flex-1 p-4">
 
+            <AssessItem 
+                icon="📋"
+                title="Pre VR Questionnaires"
+                onPress={()=>navigation.navigate("PreVRAssessment",{patientId,age,studyId})}
+                className="bg-[#F6F7F7] border-[#F6F7F7]"
+            />
 
             <AssessItem
                 icon="🎮"
@@ -25,11 +31,11 @@ const VRTab: React.FC<VRProps> = ({ patientId,age,studyId }) => {
                 onPress={() => navigation.navigate("VRSessionsList",{patientId,age,studyId} )}
                 className="bg-[#F6F7F7] border-[#F6F7F7]"
             />
- 
+
             <AssessItem 
                 icon="📋"
-                title="Pre/Post VR Questionnaires"
-                onPress={()=>navigation.navigate("PreAndPostVR",{patientId,age,studyId})}
+                title="Post VR Questionnaires"
+                onPress={()=>navigation.navigate("PostVRAssessment",{patientId,age,studyId})}
                 className="bg-[#F6F7F7] border-[#F6F7F7]"
             />
 

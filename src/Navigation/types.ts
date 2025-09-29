@@ -6,6 +6,7 @@ export type RootStackParamList = {
   Reports: undefined;
   Profile: undefined;
   PreVR: { patientId: number,age:number,studyId:number };
+  PreVRAssessment: { patientId: number,age:number,studyId:number };
   PostVRAssessment: { patientId: number,age:number,studyId:number };
   PreAndPostVR: { patientId: number,age:number,studyId:number };
   DistressThermometerScreen: { patientId: number,age:number,studyId:number };

@@ -598,7 +598,7 @@ export default function SocioDemographic() {
             </Text>
 
             <Text className="text-base font-semibold text-green-600">
-              Study ID: {studyId || "N/A"}
+              Randomization ID: {studyId || "N/A"}
             </Text>
 
             <Text className="text-base font-semibold text-gray-700">

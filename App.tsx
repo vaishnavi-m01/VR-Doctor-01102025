@@ -19,6 +19,7 @@ import ReportsScreen from './src/screens/tabs/report_tab';
 
 import Login from './src/screens/auth/Login';
 import PreVR from './src/screens/assessments/PreVR';
+import PreVRAssessment from './src/screens/assessments/PreVRAssessment';
 import PostVRAssessment from './src/screens/assessments/PostVRAssessment';
 import PreAndPostVR from './src/screens/assessments/PreAndPostVR';
 import EdmontonFactGScreen from './src/screens/patients/components/assesment/components/EdmontonFactGScreen';
@@ -213,9 +214,14 @@ export default function App() {
                       options={{ headerShown: true, title: "Pre-VR Assessment" }}
                     />
                     <Stack.Screen
+                      name="PreVRAssessment"
+                      component={PreVRAssessment}
+                      options={{ headerShown: true, title: "Pre VR Questionnaires" }}
+                    />
+                    <Stack.Screen
                       name="PostVRAssessment"
                       component={PostVRAssessment}
-                      options={{ headerShown: true, title: "Post-VR Assessment" }}
+                      options={{ headerShown: true, title: "Post VR Questionnaires" }}
                     />
                     <Stack.Screen
                       name="PreAndPostVR"

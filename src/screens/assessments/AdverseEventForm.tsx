@@ -125,6 +125,7 @@ export default function AdverseEventForm() {
     const [physicianName, setPhysicianName] = useState("");
     const [aeRelated, setAeRelated] = useState<string | null>(null);
     const [conditionContribution, setConditionContribution] = useState<string | null>(null);
+    const [randomizationId, setRandomizationId] = useState("");
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const route = useRoute<RouteProp<RootStackParamList, 'AdverseEventForm'>>();
     const { patientId, age, studyId } = route.params as { patientId: number, age: number, studyId: number };
@@ -168,6 +169,7 @@ export default function AdverseEventForm() {
 
     useEffect(() => {
         fetchAvailableSessions();
+        fetchRandomizationId(patientId.toString());
     }, []);
 
     const fetchAvailableSessions = async () => {
@@ -207,8 +209,26 @@ export default function AdverseEventForm() {
         }
     };
 
+    const fetchRandomizationId = async (participantIdParam: string) => {
+        try {
+            const response = await apiService.post('/GetParticipantDetails', {
+                ParticipantId: participantIdParam,
+            });
 
-
+            console.log('Randomization ID API response:', response.data);
+            const data = response.data?.ResponseData;
+            console.log('Randomization ID data:', data);
+            
+            if (data && data.GroupTypeNumber) {
+                console.log('Setting randomization ID:', data.GroupTypeNumber);
+                setRandomizationId(data.GroupTypeNumber);
+            } else {
+                console.log('No GroupTypeNumber found in response');
+            }
+        } catch (error) {
+            console.error('Error fetching randomization ID:', error);
+        }
+    };
 
     const toggleOutcome = (id: string) => {
         setOutcome((prev) =>
@@ -607,7 +627,7 @@ export default function AdverseEventForm() {
                             lineHeight: 24,
                         }}
                     >
-                        Study ID: {studyId ? (typeof studyId === "string" ? studyId : `${studyId}`) : "CS-0001"}
+                        Randomization ID: {randomizationId || "N/A"}
                     </Text>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
                         <Text style={{ color: "#4a5568", fontSize: 16, fontWeight: "600" }}>

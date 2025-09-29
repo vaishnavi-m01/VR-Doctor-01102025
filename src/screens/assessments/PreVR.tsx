@@ -58,6 +58,7 @@ export default function PreVR() {
 
   const [preQuestions, setPreQuestions] = useState<AssessmentQuestion[]>([]);
   const [responses, setResponses] = useState<ResponsesState>({});
+  const [randomizationId, setRandomizationId] = useState("");
 
   const route = useRoute<RouteProp<RootStackParamList, 'PostVRAssessment'>>();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -78,6 +79,7 @@ export default function PreVR() {
       const sid = studyId.toString();
       setParticipantId(pid);
       fetchAssessmentQuestions(pid, sid);
+      fetchRandomizationId(pid);
     }
   }, [patientId, studyId]);
 
@@ -142,6 +144,27 @@ export default function PreVR() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRandomizationId = async (participantIdParam: string) => {
+    try {
+      const response = await apiService.post('/GetParticipantDetails', {
+        ParticipantId: participantIdParam,
+      });
+
+      console.log('Randomization ID API response:', response.data);
+      const data = response.data?.ResponseData;
+      console.log('Randomization ID data:', data);
+      
+      if (data && data.GroupTypeNumber) {
+        console.log('Setting randomization ID:', data.GroupTypeNumber);
+        setRandomizationId(data.GroupTypeNumber);
+      } else {
+        console.log('No GroupTypeNumber found in response');
+      }
+    } catch (error) {
+      console.error('Error fetching randomization ID:', error);
     }
   };
 
@@ -527,7 +550,7 @@ export default function PreVR() {
           <View className="bg-white border-b-2 border-gray-300 rounded-xl p-6 flex-row justify-between items-center shadow-sm">
           <Text className="text-lg font-bold text-green-600">Participant ID: {participantId}</Text>
           <Text className="text-base font-semibold text-green-600">
-            Study ID: {studyId ? formatStudyId(studyId) : 'CS-0001'}
+            Randomization ID: {randomizationId || "N/A"}
           </Text>
           <Text className="text-base font-semibold text-gray-700">Age: {age || 'Not specified'}</Text>
         </View>

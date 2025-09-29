@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import Card from '../../components/Card';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../Navigation/types';
+import { apiService } from 'src/services';
 
 export default function SessionSetupScreen() {
   const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -14,10 +15,36 @@ export default function SessionSetupScreen() {
   const [lang, setLang] = useState('English');
   console.log("language", lang)
   const [sess, setSess] = useState('Relaxation');
+  const [randomizationId, setRandomizationId] = useState("");
   const route = useRoute<RouteProp<RootStackParamList, 'SessionSetupScreen'>>();
   const { patientId, age, studyId } = route.params as { patientId: number, age: number, studyId: number };
 
   const ready = !!cat && !!instr && !!lang && !!sess;
+
+  useEffect(() => {
+    fetchRandomizationId(patientId.toString());
+  }, [patientId]);
+
+  const fetchRandomizationId = async (participantIdParam: string) => {
+    try {
+      const response = await apiService.post('/GetParticipantDetails', {
+        ParticipantId: participantIdParam,
+      });
+
+      console.log('Randomization ID API response:', response.data);
+      const data = response.data?.ResponseData;
+      console.log('Randomization ID data:', data);
+      
+      if (data && data.GroupTypeNumber) {
+        console.log('Setting randomization ID:', data.GroupTypeNumber);
+        setRandomizationId(data.GroupTypeNumber);
+      } else {
+        console.log('No GroupTypeNumber found in response');
+      }
+    } catch (error) {
+      console.error('Error fetching randomization ID:', error);
+    }
+  };
 
   return (
     <View className="flex-1 bg-white">
@@ -32,7 +59,7 @@ export default function SessionSetupScreen() {
           </Text>
 
           <Text className="text-base font-semibold text-green-600">
-            Study ID: {studyId || "N/A"}
+            Randomization ID: {randomizationId || "N/A"}
           </Text>
 
           <Text className="text-base font-semibold text-gray-700">

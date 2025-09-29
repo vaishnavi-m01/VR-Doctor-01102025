@@ -152,6 +152,7 @@ const StudyObservation = () => {
   const [factGScore, setFactGScore] = useState<string | null>(null);
   const [distressScore, setDistressScore] = useState<string | null>(null);
   const [baselineLoading, setBaselineLoading] = useState<boolean>(false);
+  const [randomizationId, setRandomizationId] = useState("");
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -184,6 +185,7 @@ const StudyObservation = () => {
   useEffect(() => {
     fetchFormFields();
     loadObservationForm();
+    fetchRandomizationId(routePatientId.toString());
   }, [routePatientId, studyIdState]);
 
   const fetchFormFields = async () => {
@@ -315,6 +317,27 @@ const StudyObservation = () => {
       setError('Failed to load Study Observation data.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRandomizationId = async (participantIdParam: string) => {
+    try {
+      const response = await apiService.post('/GetParticipantDetails', {
+        ParticipantId: participantIdParam,
+      });
+
+      console.log('Randomization ID API response:', response.data);
+      const data = response.data?.ResponseData;
+      console.log('Randomization ID data:', data);
+      
+      if (data && data.GroupTypeNumber) {
+        console.log('Setting randomization ID:', data.GroupTypeNumber);
+        setRandomizationId(data.GroupTypeNumber);
+      } else {
+        console.log('No GroupTypeNumber found in response');
+      }
+    } catch (error) {
+      console.error('Error fetching randomization ID:', error);
     }
   };
 
@@ -745,7 +768,7 @@ const fetchBaselineScores = async (participantId: string, studyId: string) => {
         <View className="px-4" style={{ paddingTop: 8 }}>
           <View className="bg-white border-b-2 border-gray-300 rounded-xl p-6 flex-row justify-between items-center shadow-sm">
             <Text className="text-lg font-bold text-green-600">Participant ID: {routePatientId}</Text>
-            <Text className="text-base font-semibold text-green-600">{`Study ID: ${studyIdState}`}</Text>
+            <Text className="text-base font-semibold text-green-600">Randomization ID: {randomizationId || "N/A"}</Text>
             <Text className="text-base font-semibold text-gray-700">Age: {age ?? 'Not specified'}</Text>
           </View>
         </View>

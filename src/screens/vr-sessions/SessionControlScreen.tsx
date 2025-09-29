@@ -22,6 +22,7 @@ export default function SessionControlScreen() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [medicalHistoryCreatedDate, setMedicalHistoryCreatedDate] = useState("");
   const [doctorNotes, setDoctorNotes] = useState("");
+  const [randomizationId, setRandomizationId] = useState("");
   const { userId } = useContext(UserContext);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
@@ -60,6 +61,7 @@ export default function SessionControlScreen() {
             setAge(data.Age ?? "");
             setPhoneNumber(data.PhoneNumber ?? "");
             setMedicalHistoryCreatedDate(formatDateDDMMYYYY(data.MedicalHistoryCreatedDate));
+            setRandomizationId(data.GroupTypeNumber ?? "");
 
           }
         } catch (err) {
@@ -123,7 +125,7 @@ export default function SessionControlScreen() {
           </Text>
 
           <Text className="text-base font-semibold text-green-600">
-            Study ID: {studyId || "N/A"}
+            Randomization ID: {randomizationId || "N/A"}
           </Text>
 
           <Text className="text-base font-semibold text-gray-700">
@@ -133,13 +135,32 @@ export default function SessionControlScreen() {
       </View>
 
       <View className="px-4 pt-2 mt-4">
-        <View className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-          <Text className="text-sm text-gray-600">Session Number:  <Text className="text-lg font-semibold text-green-600 mt-1">
-            {SessionNo || "N/A"}
-          </Text></Text>
+        <View className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm flex-row justify-between items-center">
+
+          {/* Left Side Details */}
+          <View className="flex-row flex-1">
+            {/* <Text className="text-sm text-gray-600">
+              
+            </Text> */}
+            <Text className="text-lg font-semibold text-green-600 mt-1">
+              <Text className="text-sm text-gray-600"> Session Number:</Text>   {SessionNo || "N/A"}
+            </Text>
+          </View>
+
+          {/* Right Side Text */}
+          <View className="flex-row items-center">
+            <Text className="text-sm text-gray-700 font-medium">
+              Device Status:{" "}
+            </Text>
+            <Text className="text-sm font-semibold text-red-500">
+              offline
+            </Text>
+          </View>
+
 
         </View>
       </View>
+
 
       <ScrollView className="flex-1 p-6 gap-5">
         {/* Top Section - Two Column Layout */}
