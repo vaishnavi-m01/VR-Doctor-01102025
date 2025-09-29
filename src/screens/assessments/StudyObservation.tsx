@@ -17,6 +17,8 @@ import { KeyboardAvoidingView } from 'react-native';
 import { Platform } from 'react-native';
 import { formatDateDDMMYYYY } from 'src/utils/date';
 import { DropdownField } from '@components/DropdownField';
+import FactGForm from '@components/FactGForm';
+import { Modal } from 'react-native';
 
 
 const STATIC_DEVICE_ID = 'DEV-001';
@@ -153,6 +155,10 @@ const StudyObservation = () => {
   const [distressScore, setDistressScore] = useState<string | null>(null);
   const [baselineLoading, setBaselineLoading] = useState<boolean>(false);
   const [randomizationId, setRandomizationId] = useState("");
+
+  const [showFactGForm, setShowFactGForm] = useState(false);
+
+  const handleClick = () => setShowFactGForm(true);
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -695,6 +701,10 @@ const fetchBaselineScores = async (participantId: string, studyId: string) => {
     }));
   };
 
+  const closeFactGModal = () => {
+  setShowFactGForm(false); 
+};
+
 
   const renderTextField = (sofid: string, label: string, placeholder?: string, multiline = false) => {
     const hasError = !!fieldErrors[sofid];
@@ -827,16 +837,19 @@ const fetchBaselineScores = async (participantId: string, studyId: string) => {
 
           <FormCard icon="B" title="Baseline Assessment & Scores">
             <View className="flex-row flex-wrap gap-3">
-              <View className="flex-1 mt-3">
-                <Text className="text-sm text-[#rgb(44 74 67)] mb-1">FACT G Score</Text>
-                <View className="p-3 bg-gray-100 rounded-lg border border-gray-200">
-                  {baselineLoading ? (
-                    <ActivityIndicator size="small" color="#4FC264" />
-                  ) : (
-                    <Text className="text-base text-gray-800">{(factGScore && factGScore !== '') ? factGScore : '0'}</Text>
-                  )}
+              <Pressable onPress={() => setShowFactGForm(true)}>
+                <View className="flex-1 mt-3">
+                  <Text className="text-sm text-[#rgb(44 74 67)] mb-1">FACT G Score</Text>
+                  <View className="p-3 bg-gray-100 rounded-lg border border-gray-200">
+                    {baselineLoading ? (
+                      <ActivityIndicator size="small" color="#4FC264" />
+                    ) : (
+                      <Text className="text-base text-gray-800">{(factGScore && factGScore !== '') ? factGScore : '0'}</Text>
+                    )}
+                  </View>
                 </View>
-              </View>
+              </Pressable>
+
               <View className="flex-1 mt-3">
                 <Text className="text-sm text-[#rgb(44 74 67)] mb-1">Distress Thermometer Score</Text>
                 <View className="p-3 bg-gray-100 rounded-lg border border-gray-200">
@@ -849,6 +862,30 @@ const fetchBaselineScores = async (participantId: string, studyId: string) => {
               </View>
             </View>
           </FormCard>
+
+         
+        <Modal
+          visible={showFactGForm}
+          animationType="slide"
+          onRequestClose={closeFactGModal}
+          transparent={true}
+        >
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', }}>
+          <ScrollView>
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+              <Pressable onPress={closeFactGModal}>
+                <Text style={{ color: 'red', marginTop: 20 ,marginRight:20}}>Close</Text>
+              </Pressable>
+              </View>
+              <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 10 }}>
+              <FactGForm onClose={closeFactGModal} />
+            
+            </View>
+            </ScrollView>
+          </View>
+        </Modal>
+
+
 
           <FormCard icon="S" title="Session Details & Responses">
             {renderYesNoField('SOFID-9', 'Was the session completed?')}
