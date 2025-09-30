@@ -1,4 +1,4 @@
-import  { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -16,7 +16,6 @@ import ListItem from '../../components/ListItem';
 import TabPills from '../../components/TabPills';
 import ParticipantInfo from './components/participant_info';
 import AssessmentTab from './components/assesment/AssessmentTab';
-import VRTab from './components/VRTab';
 import VRSessionsList from '../vr-sessions/VRSessionsList';
 import OrientationTab from './components/OrientationTab';
 import Dashboard from './components/Dashboard';
@@ -40,7 +39,9 @@ export interface Patient {
   name?: string;
   weightKg?: number;
   groupType?: string;
-   CriteriaStatus?:string;
+  CriteriaStatus?: string;
+  GroupTypeNumber?: string;
+  PhoneNumber?:string;
 }
 
 interface ParticipantRequest {
@@ -49,12 +50,12 @@ interface ParticipantRequest {
   Gender?: string;
   ParticipantId?: string;
   StudyId?: string;
-  AgeFrom?: number;          
-  AgeTo?: number;            
-  SearchString?: string;     
-  CancerDiagnosis?: string;    
-  StageOfCancer?: string; 
-  [key: string]: unknown;  
+  AgeFrom?: number;
+  AgeTo?: number;
+  SearchString?: string;
+  CancerDiagnosis?: string;
+  StageOfCancer?: string;
+  [key: string]: unknown;
 }
 
 interface ParticipantApiResponse {
@@ -99,7 +100,7 @@ export default function ParticipantAssessmentSplit() {
     ageTo: '',
     groupType: '',
     cancerDiagnosis: '',     // new
-    stageOfCancer: '', 
+    stageOfCancer: '',
   });
 
   const SELECTED_PARTICIPANT_KEY = 'selectedParticipantId';
@@ -144,8 +145,8 @@ export default function ParticipantAssessmentSplit() {
       ageFrom: '',
       ageTo: '',
       groupType: '',
-      cancerDiagnosis: '',     
-      stageOfCancer: '', 
+      cancerDiagnosis: '',
+      stageOfCancer: '',
     });
     setSearchText('');
     setAppliedSearchText('');
@@ -215,9 +216,9 @@ export default function ParticipantAssessmentSplit() {
 
   const handleAdvancedDone = async () => {
     if (!validateAgeRange()) {
-      return; 
+      return;
     }
-    
+
     setSearchText('');
     setAppliedSearchText('');
     setSelectedGroupFilter('All');
@@ -273,7 +274,7 @@ export default function ParticipantAssessmentSplit() {
   };
 
   const CANCER_DIAGNOSES = ['ovarian', 'lungs', 'breast', 'defuse Large B cell Lymphoma',];
-  const STAGES = ['i', 'ii', 'iii', 'iv']; 
+  const STAGES = ['i', 'ii', 'iii', 'iv'];
 
 
   // Enhanced fetch function with advanced filters updated for CriteriaStatus
@@ -293,7 +294,7 @@ export default function ParticipantAssessmentSplit() {
         requestBody.Gender = advFilters.gender;
       }
       if (advFilters.cancerDiagnosis?.trim()) {
-      requestBody.CancerDiagnosis = advFilters.cancerDiagnosis.trim();
+        requestBody.CancerDiagnosis = advFilters.cancerDiagnosis.trim();
       }
       if (advFilters.stageOfCancer?.trim()) {
         requestBody.StageOfCancer = advFilters.stageOfCancer.trim();
@@ -306,12 +307,12 @@ export default function ParticipantAssessmentSplit() {
       if (!isNaN(ageToNum) && advFilters.ageTo !== '') {
         requestBody.AgeTo = ageToNum;
       }
-       const searchCap = trimmedSearch.charAt(0).toUpperCase() + trimmedSearch.slice(1);
+      const searchCap = trimmedSearch.charAt(0).toUpperCase() + trimmedSearch.slice(1);
 
       if (trimmedSearch !== '') {
         if ((trimmedSearch === 'male' || trimmedSearch === 'female') && !advFilters.gender) {
           requestBody.Gender = trimmedSearch.charAt(0).toUpperCase() + trimmedSearch.slice(1);
-        } 
+        }
         else if ((trimmedSearch === 'included' || trimmedSearch === 'excluded') && !advFilters.criteriaStatus) {
           requestBody.CriteriaStatus = searchCap;
         }
@@ -319,31 +320,30 @@ export default function ParticipantAssessmentSplit() {
         else if ((trimmedSearch === 'study' || trimmedSearch === 'controlled') && !advFilters.groupType) {
           requestBody.GroupType = searchCap;
         }
-        else if (CANCER_DIAGNOSES.includes(trimmedSearch) && !advFilters.cancerDiagnosis) { 
+        else if (CANCER_DIAGNOSES.includes(trimmedSearch) && !advFilters.cancerDiagnosis) {
           requestBody.CancerDiagnosis = searchCap;
-        } 
-        else if (STAGES.includes(trimmedSearch.toLowerCase()) && !advFilters.stageOfCancer) {   
+        }
+        else if (STAGES.includes(trimmedSearch.toLowerCase()) && !advFilters.stageOfCancer) {
           requestBody.StageOfCancer = trimmedSearch.toUpperCase();
         }
 
         else if (/^pid-\d+$/i.test(trimmedSearch)) {
           requestBody.SearchString = trimmedSearch.toUpperCase();
-        } 
+        }
         else if (/^\d+$/i.test(trimmedSearch)) {
           requestBody.SearchString = `PID-${trimmedSearch}`;
         }
-         else if (
+        else if (
           !isNaN(Number(trimmedSearch)) &&
           Number(trimmedSearch) >= 1 &&
           Number(trimmedSearch) <= 120 &&
           !advFilters.ageFrom &&
           !advFilters.ageTo
-        ) 
-        {
+        ) {
           requestBody.AgeFrom = Number(trimmedSearch);
           requestBody.AgeTo = Number(trimmedSearch);
         }
-         else {
+        else {
           requestBody.SearchString = trimmedSearch;
         }
       }
@@ -362,7 +362,7 @@ export default function ParticipantAssessmentSplit() {
         const parsed: Patient[] = response.data.ResponseData.map((item) => ({
           id: item.ParticipantId,
           ParticipantId: item.ParticipantId,
-          studyId: item.StudyId, 
+          studyId: item.StudyId,
           age: Number(item.Age) || 0,
           status: item.CriteriaStatus?.toLowerCase() || "pending",
           gender: ["Male", "Female", "Other"].includes(item.Gender) ? item.Gender : "Unknown",
@@ -370,7 +370,9 @@ export default function ParticipantAssessmentSplit() {
           stage: item.StageOfCancer || "N/A",
           name: item.Name ?? undefined,
           groupType: item.GroupType || null,
-          CriteriaStatus:item.CriteriaStatus || null
+          CriteriaStatus: item.CriteriaStatus || null,
+          GroupTypeNumber:item.GroupTypeNumber || null,
+          PhoneNumber:item.PhoneNumber || null
         }));
         setParticipants(parsed);
         // if (selId === null && parsed.length > 0) {
@@ -399,44 +401,44 @@ export default function ParticipantAssessmentSplit() {
   };
 
   const validateAgeRange = (): boolean => {
-  const fromFilled = advFilters.ageFrom.trim() !== '';
-  const toFilled = advFilters.ageTo.trim() !== '';
+    const fromFilled = advFilters.ageFrom.trim() !== '';
+    const toFilled = advFilters.ageTo.trim() !== '';
 
-  if ((fromFilled && !toFilled) || (!fromFilled && toFilled)) {
-    setAgeRangeError('Both "From" and "To" age fields are required');
-    return false;
-  }
-
-  // Optional: additional validation like from <= to
-  if (fromFilled && toFilled) {
-    const fromNum = Number(advFilters.ageFrom);
-    const toNum = Number(advFilters.ageTo);
-    if (fromNum > toNum) {
-      setAgeRangeError('"From" age must be less than or equal to "To" age.');
+    if ((fromFilled && !toFilled) || (!fromFilled && toFilled)) {
+      setAgeRangeError('Both "From" and "To" age fields are required');
       return false;
     }
-  }
 
-  setAgeRangeError('');
-  return true;
-};
+    // Optional: additional validation like from <= to
+    if (fromFilled && toFilled) {
+      const fromNum = Number(advFilters.ageFrom);
+      const toNum = Number(advFilters.ageTo);
+      if (fromNum > toNum) {
+        setAgeRangeError('"From" age must be less than or equal to "To" age.');
+        return false;
+      }
+    }
+
+    setAgeRangeError('');
+    return true;
+  };
 
 
   // Client-side filter function
   const filterParticipants = (list: Patient[], query: string, groupFilter: string = 'All') => {
     let filtered = list;
-    
+
     // Apply group filter first
     if (groupFilter !== 'All') {
       filtered = list.filter(p => {
         if (groupFilter === 'Study') return p.groupType === 'Study';
         if (groupFilter === 'Controlled') return p.groupType === 'Controlled';
         if (groupFilter === 'Unassign') return p.groupType === null || p.groupType === undefined;
-        
+
         return true;
       });
     }
-    
+
     // Then apply search query
     const q = query.trim().toLowerCase();
     if (!q) return filtered;
@@ -451,14 +453,14 @@ export default function ParticipantAssessmentSplit() {
       const stageOfCancerStr = p.stage?.toLowerCase() || '';
 
       return (
-          pidStr.includes(q) ||
-          genderStr.includes(q) ||
-          cancerTypeStr.includes(q) ||
-          nameStr.includes(q) ||
-          criteriaStatusStr.includes(q) ||
-          cancerDiagnosisStr.includes(q) ||
-          stageOfCancerStr.includes(q) ||
-          groupTypeStr.includes(q)
+        pidStr.includes(q) ||
+        genderStr.includes(q) ||
+        cancerTypeStr.includes(q) ||
+        nameStr.includes(q) ||
+        criteriaStatusStr.includes(q) ||
+        cancerDiagnosisStr.includes(q) ||
+        stageOfCancerStr.includes(q) ||
+        groupTypeStr.includes(q)
 
       );
     });
@@ -567,6 +569,9 @@ export default function ParticipantAssessmentSplit() {
     const patientId = sel?.ParticipantId || 0;
     const studyId = sel?.studyId || 0
     const age = sel?.age ?? 0;
+    const RandomizationId = sel?.GroupTypeNumber;
+    const Gender = sel?.gender;
+    const PhoneNumber= sel?.PhoneNumber
 
     switch (tab) {
       case 'dash':
@@ -578,7 +583,7 @@ export default function ParticipantAssessmentSplit() {
       case 'assessment':
         return <AssessmentTab patientId={patientId} age={age} studyId={studyId} groupType={sel?.groupType} />;
       case ' VR':
-        return <VRSessionsList patientId={patientId} age={age} studyId={studyId} />;
+        return <VRSessionsList patientId={patientId} age={age} studyId={studyId} RandomizationId ={RandomizationId} Gender={Gender} phoneNumber={PhoneNumber}/>;
       case 'notification':
         return null;
       default:
@@ -595,7 +600,7 @@ export default function ParticipantAssessmentSplit() {
             <View className="flex-row items-center justify-between mb-2">
               <View className="flex-row items-center gap-2">
                 <Text className="font-extrabold">Participant List</Text>
-               
+
                 <Image source={require("../../../assets/patientList.png")} />
               </View>
 
@@ -626,7 +631,7 @@ export default function ParticipantAssessmentSplit() {
                 <TextInput
                   placeholder="Search by Patient ID,Cancer type,Gender,Group,status,stage"
                   value={searchText}
-                  onChangeText={(val:any) => {
+                  onChangeText={(val: any) => {
                     setSearchText(val);
                     // Clearing handled by useEffect on searchText above
                   }}
@@ -648,42 +653,38 @@ export default function ParticipantAssessmentSplit() {
                 <MaterialCommunityIcons name="tune" size={24} color="black" />
               </TouchableOpacity>
             </View>
-            
+
             {/* Group Filter Buttons - 2x2 Grid */}
             <View className="mt-3">
               <View className="flex-row justify-between mb-2">
                 <Pressable
                   onPress={() => setSelectedGroupFilter('All')}
-                  className={`flex-1 mx-1 py-1.5 px-3 rounded-lg border ${
-                    selectedGroupFilter === 'All'
+                  className={`flex-1 mx-1 py-1.5 px-3 rounded-lg border ${selectedGroupFilter === 'All'
                       ? 'bg-green-600 border-green-600'
                       : 'bg-white border-gray-300'
-                  }`}
+                    }`}
                 >
                   <Text
-                    className={`text-center text-sm font-medium ${
-                      selectedGroupFilter === 'All'
+                    className={`text-center text-sm font-medium ${selectedGroupFilter === 'All'
                         ? 'text-white'
                         : 'text-gray-700'
-                    }`}
+                      }`}
                   >
                     All ({groupCounts.All})
                   </Text>
                 </Pressable>
                 <Pressable
                   onPress={() => setSelectedGroupFilter('Study')}
-                  className={`flex-1 mx-1 py-1.5 px-3 rounded-lg border ${
-                    selectedGroupFilter === 'Study'
+                  className={`flex-1 mx-1 py-1.5 px-3 rounded-lg border ${selectedGroupFilter === 'Study'
                       ? 'bg-green-600 border-green-600'
                       : 'bg-[#EBF6D6] border-[#EBF6D6]'
-                  }`}
+                    }`}
                 >
                   <Text
-                    className={`text-center text-sm font-medium ${
-                      selectedGroupFilter === 'Study'
+                    className={`text-center text-sm font-medium ${selectedGroupFilter === 'Study'
                         ? 'text-white'
                         : 'text-gray-700'
-                    }`}
+                      }`}
                   >
                     Study ({groupCounts.Study})
                   </Text>
@@ -692,43 +693,39 @@ export default function ParticipantAssessmentSplit() {
               <View className="flex-row justify-between">
                 <Pressable
                   onPress={() => setSelectedGroupFilter('Controlled')}
-                  className={`flex-1 mx-1 py-1.5 px-3 rounded-lg border ${
-                    selectedGroupFilter === 'Controlled'
+                  className={`flex-1 mx-1 py-1.5 px-3 rounded-lg border ${selectedGroupFilter === 'Controlled'
                       ? 'bg-green-600 border-green-600'
                       : 'bg-[#FFE8DA] border-[#FFE8DA]'
-                  }`}
+                    }`}
                 >
                   <Text
-                    className={`text-center text-sm font-medium ${
-                      selectedGroupFilter === 'Controlled'
+                    className={`text-center text-sm font-medium ${selectedGroupFilter === 'Controlled'
                         ? 'text-white'
                         : 'text-gray-700'
-                    }`}
+                      }`}
                   >
                     Controlled ({groupCounts.Controlled})
                   </Text>
                 </Pressable>
                 <Pressable
                   onPress={() => setSelectedGroupFilter('Unassign')}
-                  className={`flex-1 mx-1 py-1.5 px-3 rounded-lg border ${
-                    selectedGroupFilter === 'Unassign'
+                  className={`flex-1 mx-1 py-1.5 px-3 rounded-lg border ${selectedGroupFilter === 'Unassign'
                       ? 'bg-green-600 border-green-600'
                       : 'bg-[#D2EBF8] border-[#D2EBF8]'
-                  }`}
+                    }`}
                 >
                   <Text
-                    className={`text-center text-sm font-medium ${
-                      selectedGroupFilter === 'Unassign'
+                    className={`text-center text-sm font-medium ${selectedGroupFilter === 'Unassign'
                         ? 'text-white'
                         : 'text-gray-700'
-                    }`}
+                      }`}
                   >
                     Unassign ({groupCounts.Unassign})
                   </Text>
                 </Pressable>
               </View>
             </View>
-            
+
             {/* Advanced Filter Modal */}
             <AdvancedFilterModal
               visible={showAdvancedSearch}
@@ -738,8 +735,8 @@ export default function ParticipantAssessmentSplit() {
               onGenderChange={handleGenderChange}
               onAgeChange={handleAgeChange}
               onGroupTypeChange={handleGroupTypeChange}
-                onCancerDiagnosisChange={handleCancerDiagnosisChange}   // new
-              onStageOfCancerChange={handleStageOfCancerChange} 
+              onCancerDiagnosisChange={handleCancerDiagnosisChange}   // new
+              onStageOfCancerChange={handleStageOfCancerChange}
               onClearFilters={handleClearFilters}
               onFiltersReset={onFiltersReset}
               ageRangeError={ageRangeError}
@@ -778,7 +775,7 @@ export default function ParticipantAssessmentSplit() {
               <ActivityIndicator color="#0ea06c" />
             ) : filteredParticipants.length > 0 ? (
               filteredParticipants.map((p) => (
-               <ListItem
+                <ListItem
                   key={p.ParticipantId}
                   item={{
                     ...p,
@@ -786,7 +783,7 @@ export default function ParticipantAssessmentSplit() {
                     status: p.status as 'ok' | 'pending' | 'alert',
                     gender: p.gender as 'Male' | 'Female' | 'Other',
                     groupType: p.groupType,
-                    CriteriaStatus:p.CriteriaStatus
+                    CriteriaStatus: p.CriteriaStatus
                   }}
                   selected={p.ParticipantId === selId}
                   onPress={() => setSelId(p.ParticipantId)}

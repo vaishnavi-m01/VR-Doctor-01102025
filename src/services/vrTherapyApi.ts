@@ -425,7 +425,7 @@ export class VRTherapyApiService {
    */
   getInstrumentForAPI(instrument: string): string {
     const instrumentMap: { [key: string]: string } = {
-      'Flute': 'piano',
+      'Flute': 'Flute',
       'Piano': 'piano',
       'Singing Bowl': 'piano',
       'Nature Sounds': 'piano'

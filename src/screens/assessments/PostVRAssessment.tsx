@@ -50,7 +50,7 @@ export default function PostVRAssessment() {
   const route = useRoute<RouteProp<RootStackParamList, 'PostVRAssessment'>>();
 
   const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({});
-  const { patientId, age, studyId } = route.params as { patientId: number | string; age: number; studyId: number | string };
+  const { patientId, age, studyId, RandomizationId } = route.params as { patientId: number | string; age: number; studyId: number | string, RandomizationId: string };
 
   // Format participantId and studyId to avoid double prefixing
   const participantIdInput = typeof patientId === 'string' && patientId.startsWith('PID-') ? patientId : `PID-${patientId}`;
@@ -107,33 +107,33 @@ export default function PostVRAssessment() {
     }
   };
 
-  const fetchRandomizationId = async (participantIdParam: string) => {
-    try {
-      const response = await apiService.post('/GetParticipantDetails', {
-        ParticipantId: participantIdParam,
-      });
+  // const fetchRandomizationId = async (participantIdParam: string) => {
+  //   try {
+  //     const response = await apiService.post('/GetParticipantDetails', {
+  //       ParticipantId: participantIdParam,
+  //     });
 
-      console.log('Randomization ID API response:', response.data);
-      const data = response.data?.ResponseData;
-      console.log('Randomization ID data:', data);
-      
-      if (data && data.GroupTypeNumber) {
-        console.log('Setting randomization ID:', data.GroupTypeNumber);
-        setRandomizationId(data.GroupTypeNumber);
-      } else {
-        console.log('No GroupTypeNumber found in response');
-      }
-    } catch (error) {
-      console.error('Error fetching randomization ID:', error);
-    }
-  };
+  //     console.log('Randomization ID API response:', response.data);
+  //     const data = response.data?.ResponseData;
+  //     console.log('Randomization ID data:', data);
+
+  //     if (data && data.GroupTypeNumber) {
+  //       console.log('Setting randomization ID:', data.GroupTypeNumber);
+  //       setRandomizationId(data.GroupTypeNumber);
+  //     } else {
+  //       console.log('No GroupTypeNumber found in response');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching randomization ID:', error);
+  //   }
+  // };
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
         await fetchAvailableSessions();
-        fetchRandomizationId(patientId.toString());
+        // fetchRandomizationId(patientId.toString());
 
         const questionsRes = await apiService.post<{ ResponseData: Question[] }>("/GetPrePostVRSessionQuestionData");
         const fetchedQuestions = questionsRes.data.ResponseData || [];
@@ -354,26 +354,32 @@ export default function PostVRAssessment() {
           shadowRadius: 1,
           shadowOffset: { width: 0, height: 1 },
         }}>
-          <Text
-            style={{
-              color: "rgba(22, 163, 74, 1)",
-              fontWeight: "700",
-              fontSize: 18,
-              lineHeight: 28,
-            }}
-          >
-            Participant ID: {participantIdInput}
-          </Text>
-          <Text
-            style={{
-              color: "rgba(22, 163, 74, 1)",
-              fontWeight: "600",
-              fontSize: 16,
-              lineHeight: 24,
-            }}
-          >
-            Randomization ID: {randomizationId || "N/A"}
-          </Text>
+
+          <View className="flex-1 flex-col">
+            <Text
+              style={{
+                color: "rgba(22, 163, 74, 1)",
+                fontWeight: "700",
+                fontSize: 18,
+                lineHeight: 28,
+              }}
+            >
+              Participant ID: {participantIdInput}
+            </Text>
+
+            <Text
+              style={{
+                color: "rgba(22, 163, 74, 1)",
+                fontWeight: "600",
+                fontSize: 16,
+                lineHeight: 24,
+                marginTop:3
+              }}
+            >
+              Randomization ID: {RandomizationId || "N/A"}
+            </Text>
+          </View>
+
 
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <Text style={{ fontSize: 16, fontWeight: '600', color: '#4a5568' }}>
@@ -413,10 +419,10 @@ export default function PostVRAssessment() {
             onPress={() => setShowSessionDropdown(false)}
           />
           <View
-            className="absolute top-20 right-6 bg-white border border-gray-200 rounded-lg shadow-lg z-[9999] w-32 max-h-48" 
+            className="absolute top-20 right-6 bg-white border border-gray-200 rounded-lg shadow-lg z-[9999] w-32 max-h-48"
             style={{ elevation: 10, maxHeight: 80, overflow: 'hidden' }}
           >
-            <ScrollView style={{ maxHeight: 140}}>
+            <ScrollView style={{ maxHeight: 140 }}>
               {availableSessions.map((session, index) => (
                 <Pressable
                   key={session}

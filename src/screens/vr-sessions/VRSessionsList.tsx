@@ -1,5 +1,5 @@
 import { useState, useContext, useCallback } from 'react';
-import { View, Text, ScrollView, Pressable, TouchableOpacity, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, ScrollView, Pressable, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../Navigation/types';
@@ -15,6 +15,7 @@ interface VRSession {
   ParticipantId: string;
   StudyId: string;
   Description: string;
+  SessionType?:string;
   SessionStatus: string;
   Status: number;
   CreatedBy: string;
@@ -27,6 +28,9 @@ interface VRSessionsListProps {
   patientId?: number;
   age?: number;
   studyId?: number;
+  Gender?:string;
+  phoneNumber?:string;
+  RandomizationId?:string;
 }
 
 export default function VRSessionsList(props?: VRSessionsListProps) {
@@ -37,7 +41,10 @@ export default function VRSessionsList(props?: VRSessionsListProps) {
   const { 
     patientId = props?.patientId || 0, 
     age = props?.age || 0, 
-    studyId = props?.studyId || 0 
+    studyId = props?.studyId || 0 ,
+    RandomizationId = props?.RandomizationId || 0,
+    Gender = props?.Gender || "",
+    phoneNumber=props?.phoneNumber || ""
   } = route.params || {};
   
   console.log('🔍 VRSessionsList Debug:');
@@ -53,7 +60,7 @@ export default function VRSessionsList(props?: VRSessionsListProps) {
   const [showNewSessionModal, setShowNewSessionModal] = useState(false);
   const [sessionDescription, setSessionDescription] = useState('');
   const [isCreatingSession, setIsCreatingSession] = useState(false);
-  const [randomizationId, setRandomizationId] = useState("");
+  // const [randomizationId, setRandomizationId] = useState("");
   const { userId } = useContext(UserContext);
 
 
@@ -103,32 +110,32 @@ export default function VRSessionsList(props?: VRSessionsListProps) {
     }
   };
 
-  const fetchRandomizationId = async (participantIdParam: string) => {
-    try {
-      const response = await apiService.post('/GetParticipantDetails', {
-        ParticipantId: participantIdParam,
-      });
+  // const fetchRandomizationId = async (participantIdParam: string) => {
+  //   try {
+  //     const response = await apiService.post('/GetParticipantDetails', {
+  //       ParticipantId: participantIdParam,
+  //     });
 
-      console.log('Randomization ID API response:', response.data);
-      const data = response.data?.ResponseData;
-      console.log('Randomization ID data:', data);
+  //     console.log('Randomization ID API response:', response.data);
+  //     const data = response.data?.ResponseData;
+  //     console.log('Randomization ID data:', data);
       
-      if (data && data.GroupTypeNumber) {
-        console.log('Setting randomization ID:', data.GroupTypeNumber);
-        setRandomizationId(data.GroupTypeNumber);
-      } else {
-        console.log('No GroupTypeNumber found in response');
-      }
-    } catch (error) {
-      console.error('Error fetching randomization ID:', error);
-    }
-  };
+  //     if (data && data.GroupTypeNumber) {
+  //       console.log('Setting randomization ID:', data.GroupTypeNumber);
+  //       setRandomizationId(data.GroupTypeNumber);
+  //     } else {
+  //       console.log('No GroupTypeNumber found in response');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching randomization ID:', error);
+  //   }
+  // };
 
   // Load sessions on component mount
   useFocusEffect(
     useCallback(() => {
       fetchVRSessions();
-      fetchRandomizationId(patientId.toString());
+      // fetchRandomizationId(patientId.toString());
     }, [patientId, studyId])
   );
 
@@ -223,6 +230,9 @@ export default function VRSessionsList(props?: VRSessionsListProps) {
         studyId,
         sessionNo: session.SessionNo,
         sessionType: session.SessionType,
+        RandomizationId,
+        Gender,
+        phoneNumber
       });
     } catch (err) {
       console.error(' Error navigating to VR Session page:', err);
@@ -246,7 +256,7 @@ export default function VRSessionsList(props?: VRSessionsListProps) {
             </View>
 
             <Text className="text-base font-bold text-green-600">
-              Randomization ID: {randomizationId || "N/A"}
+              Randomization ID: {RandomizationId || "N/A"}
             </Text>
           </View>
         </View>
@@ -293,7 +303,7 @@ export default function VRSessionsList(props?: VRSessionsListProps) {
           </View>
         ) : (
           <View className="space-y-6">
-            {sessions.map((session, index) => (
+            {sessions.map((session, _index) => (
               <TouchableOpacity
                 key={session.SessionNo}
                 onPress={() => handleSessionPress(session)}
@@ -373,8 +383,8 @@ export default function VRSessionsList(props?: VRSessionsListProps) {
 
               <DropdownField
                 // label="VR Content Type at AE"
-                value={sessionDescription}           // Current selected value
-                onValueChange={(val) => setSessionDescription(val)}  // Update state when an option is selected
+                value={sessionDescription}          
+                onValueChange={(val) => setSessionDescription(val)}  
                 options={[
                   { label: "Guided imager", value: "Guided imager" },
                   { label: "Sound healing", value: "Sound healing" },

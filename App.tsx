@@ -9,7 +9,6 @@ import * as Font from 'expo-font';
 import { Provider } from 'react-redux';
 import { store } from './src/store';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
-
 import "./global.css";
 
 import ParticipantsScreen from './src/screens/patients/PatientAssessmentSplit';

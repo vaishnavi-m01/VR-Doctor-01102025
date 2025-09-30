@@ -162,9 +162,6 @@ export default function SocioDemographic() {
 
 
 
-
-
-
   useEffect(() => {
     apiService
       .post<{ ResponseData: LanguageData[] }>("/GetLanguageData")
@@ -444,9 +441,9 @@ export default function SocioDemographic() {
     });
 
 
-    if (!participantSignature) {
-      newErrors.participantSignature = "Participant signature is required";
-    }
+    // if (!participantSignature) {
+    //   newErrors.participantSignature = "Participant signature is required";
+    // }
 
 
     if (!consentGiven) {
@@ -602,7 +599,7 @@ export default function SocioDemographic() {
             </Text>
 
             <Text className="text-base font-semibold text-green-600">
-              Randomization ID: {studyId || "N/A"}
+              Study ID: {studyId || "N/A"}
             </Text>
 
             <Text className="text-base font-semibold text-gray-700">

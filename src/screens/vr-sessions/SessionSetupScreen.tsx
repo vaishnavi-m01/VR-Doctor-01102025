@@ -1,10 +1,10 @@
-import { useState, useEffect, useContext, useCallback } from 'react';
+import { useState, useContext } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import Card from '../../components/Card';
-import { RouteProp, useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../Navigation/types';
-import { apiService, vrTherapyApi } from 'src/services';
+import {  vrTherapyApi } from 'src/services';
 import { UserContext } from 'src/store/context/UserContext';
 import Toast from 'react-native-toast-message';
 
@@ -18,11 +18,9 @@ export default function SessionSetupScreen() {
   const [lang, setLang] = useState('English');
   console.log("language", lang)
   const [sess, setSess] = useState('Relaxation');
-  const [randomizationId, setRandomizationId] = useState("");
-  const [gender, setGender] = useState("");
-  const [contactNumber, setContactNumber] = useState("");
+
   const route = useRoute<RouteProp<RootStackParamList, 'SessionSetupScreen'>>();
-  const { patientId = 0, age = 0, studyId = 0 } = route.params || {};
+  const { patientId , age , studyId ,RandomizationId,Gender,phoneNumber } = route.params || {};
   
   console.log('🔍 SessionSetupScreen Debug:');
   console.log('  Route params:', route.params);
@@ -32,61 +30,8 @@ export default function SessionSetupScreen() {
 
   const ready = !!cat && !!instr && !!lang && !!sess;
 
-  // Load participant details when screen is focused
-  useFocusEffect(
-    useCallback(() => {
-      console.log('🔄 SessionSetupScreen useFocusEffect triggered with patientId:', patientId);
-      if (patientId && patientId > 0) {
-        console.log('✅ PatientId is valid, calling fetchRandomizationId');
-        fetchRandomizationId(patientId.toString());
-      } else {
-        console.log('❌ PatientId is invalid or missing:', patientId);
-      }
-    }, [patientId])
-  );
 
-  const fetchRandomizationId = async (participantIdParam: string) => {
-    try {
-      console.log('🔍 SessionSetupScreen: Fetching participant details for ID:', participantIdParam);
-      
-      const response = await apiService.post<{ ResponseData: any }>('/GetParticipantDetails', {
-        ParticipantId: participantIdParam,
-      });
 
-      console.log('📊 SessionSetupScreen: Randomization ID API response:', response.data);
-      console.log('📊 SessionSetupScreen: Full response:', JSON.stringify(response.data, null, 2));
-      
-      const data = response.data?.ResponseData;
-      console.log('📋 SessionSetupScreen: Randomization ID data:', data);
-      console.log('📋 SessionSetupScreen: Data type:', typeof data);
-      console.log('📋 SessionSetupScreen: Data keys:', data ? Object.keys(data) : 'No data');
-      
-      if (data && data.GroupTypeNumber) {
-        console.log('✅ SessionSetupScreen: Setting randomization ID:', data.GroupTypeNumber);
-        setRandomizationId(data.GroupTypeNumber);
-      } else {
-        console.log('❌ SessionSetupScreen: No GroupTypeNumber found in response');
-        setRandomizationId("Not Available");
-      }
-
-      // Set additional participant details
-      if (data) {
-        console.log('📋 SessionSetupScreen: Setting gender:', data.Gender);
-        console.log('📋 SessionSetupScreen: Setting contact number:', data.PhoneNumber);
-        setGender(data.Gender || "Not specified");
-        setContactNumber(data.PhoneNumber || "Not specified");
-      } else {
-        console.log('❌ SessionSetupScreen: No data found for additional details');
-        setGender("Not Available");
-        setContactNumber("Not Available");
-      }
-    } catch (error) {
-      console.error('💥 SessionSetupScreen: Error fetching randomization ID:', error);
-      setRandomizationId("Error Loading");
-      setGender("Error Loading");
-      setContactNumber("Error Loading");
-    }
-  };
 
   return (
     <View className="flex-1 bg-white">
@@ -107,7 +52,7 @@ export default function SessionSetupScreen() {
             
             <View className="flex-1 min-w-[150px]">
               <Text className="text-sm text-gray-600">Randomization ID</Text>
-              <Text className="text-base font-semibold text-green-600">{randomizationId || "N/A"}</Text>
+              <Text className="text-base font-semibold text-green-600">{RandomizationId || "N/A"}</Text>
             </View>
             
             <View className="flex-1 min-w-[150px]">
@@ -117,12 +62,12 @@ export default function SessionSetupScreen() {
             
             <View className="flex-1 min-w-[150px]">
               <Text className="text-sm text-gray-600">Gender</Text>
-              <Text className="text-base font-semibold text-gray-700">{gender || "Not specified"}</Text>
+              <Text className="text-base font-semibold text-gray-700">{Gender || "Not specified"}</Text>
             </View>
             
             <View className="flex-1 min-w-[150px]">
               <Text className="text-sm text-gray-600">Contact Number</Text>
-              <Text className="text-base font-semibold text-gray-700">{contactNumber || "Not specified"}</Text>
+              <Text className="text-base font-semibold text-gray-700">{phoneNumber || "Not specified"}</Text>
             </View>
           </View>
         </View>

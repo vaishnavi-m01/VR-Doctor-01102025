@@ -1,11 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
 import { ScrollView, Text, View } from 'react-native';
-import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../Navigation/types';
 import { RouteProp } from '@react-navigation/native';
 import AssessItem from '../../components/AssessItem';
-import { apiService } from 'src/services';
 
 type VRSessionPageNavigationProp = NativeStackNavigationProp<RootStackParamList, 'VRSessionPage'>;
 type VRSessionPageRouteProp = RouteProp<RootStackParamList, 'VRSessionPage'>;
@@ -16,8 +14,8 @@ export default function VRSessionPage() {
   const navigation = useNavigation<VRSessionPageNavigationProp>();
   const route = useRoute<VRSessionPageRouteProp>();
   
-  const { patientId, age, studyId, sessionNo, sessionType } = route.params;
-  const [randomizationId, setRandomizationId] = useState("");
+  const { patientId, age, studyId, sessionNo, sessionType,RandomizationId,Gender,phoneNumber } = route.params;
+  // const [randomizationId, setRandomizationId] = useState("");
   
   console.log('🔍 VRSessionPage Debug:');
   console.log('  Route params:', route.params);
@@ -26,53 +24,53 @@ export default function VRSessionPage() {
   console.log('  StudyId:', studyId);
   console.log('  SessionNo:', sessionNo);
   console.log('  SessionType:', sessionType);
-  console.log('  Current randomizationId state:', randomizationId);
+ 
 
-  // Load participant details when screen is focused
-  useFocusEffect(
-    useCallback(() => {
-      console.log('🔄 VRSessionPage useFocusEffect triggered with patientId:', patientId);
-      if (patientId && patientId > 0) {
-        console.log('✅ PatientId is valid, calling fetchRandomizationId');
-        fetchRandomizationId(patientId.toString());
-      } else {
-        console.log('❌ PatientId is invalid or missing:', patientId);
-      }
-    }, [patientId])
-  );
+  // // Load participant details when screen is focused
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     console.log('🔄 VRSessionPage useFocusEffect triggered with patientId:', patientId);
+  //     if (patientId && patientId > 0) {
+  //       console.log('✅ PatientId is valid, calling fetchRandomizationId');
+  //       fetchRandomizationId(patientId.toString());
+  //     } else {
+  //       console.log('❌ PatientId is invalid or missing:', patientId);
+  //     }
+  //   }, [patientId])
+  // );
 
-  const fetchRandomizationId = async (participantIdParam: string) => {
-    try {
-      console.log('🔍 VRSessionPage: Fetching participant details for ID:', participantIdParam);
+  // const fetchRandomizationId = async (participantIdParam: string) => {
+  //   try {
+  //     console.log('🔍 VRSessionPage: Fetching participant details for ID:', participantIdParam);
       
-      const response = await apiService.post<{ ResponseData: any }>('/GetParticipantDetails', {
-        ParticipantId: participantIdParam,
-      });
+  //     const response = await apiService.post<{ ResponseData: any }>('/GetParticipantDetails', {
+  //       ParticipantId: participantIdParam,
+  //     });
 
-      console.log('📊 VRSessionPage: Randomization ID API response:', response.data);
-      console.log('📊 VRSessionPage: Full response:', JSON.stringify(response.data, null, 2));
+  //     console.log('📊 VRSessionPage: Randomization ID API response:', response.data);
+  //     console.log('📊 VRSessionPage: Full response:', JSON.stringify(response.data, null, 2));
       
-      const data = response.data?.ResponseData;
-      console.log('📋 VRSessionPage: Randomization ID data:', data);
-      console.log('📋 VRSessionPage: Data type:', typeof data);
-      console.log('📋 VRSessionPage: Data keys:', data ? Object.keys(data) : 'No data');
+  //     const data = response.data?.ResponseData;
+  //     console.log('📋 VRSessionPage: Randomization ID data:', data);
+  //     console.log('📋 VRSessionPage: Data type:', typeof data);
+  //     console.log('📋 VRSessionPage: Data keys:', data ? Object.keys(data) : 'No data');
       
-      if (data && data.GroupTypeNumber) {
-        console.log('✅ VRSessionPage: Setting randomization ID:', data.GroupTypeNumber);
-        setRandomizationId(data.GroupTypeNumber);
-      } else if (data && data.RandomizationId) {
-        console.log('✅ VRSessionPage: Setting randomization ID (alternative field):', data.RandomizationId);
-        setRandomizationId(data.RandomizationId);
-      } else {
-        console.log('❌ VRSessionPage: No GroupTypeNumber or RandomizationId found in response');
-        console.log('❌ VRSessionPage: Available fields:', data ? Object.keys(data) : 'No data');
-        setRandomizationId("Not Available");
-      }
-    } catch (error) {
-      console.error('💥 VRSessionPage: Error fetching randomization ID:', error);
-      setRandomizationId("Error Loading");
-    }
-  };
+  //     if (data && data.GroupTypeNumber) {
+  //       console.log('✅ VRSessionPage: Setting randomization ID:', data.GroupTypeNumber);
+  //       setRandomizationId(data.GroupTypeNumber);
+  //     } else if (data && data.RandomizationId) {
+  //       console.log('✅ VRSessionPage: Setting randomization ID (alternative field):', data.RandomizationId);
+  //       setRandomizationId(data.RandomizationId);
+  //     } else {
+  //       console.log('❌ VRSessionPage: No GroupTypeNumber or RandomizationId found in response');
+  //       console.log('❌ VRSessionPage: Available fields:', data ? Object.keys(data) : 'No data');
+  //       setRandomizationId("Not Available");
+  //     }
+  //   } catch (error) {
+  //     console.error('💥 VRSessionPage: Error fetching randomization ID:', error);
+  //     setRandomizationId("Error Loading");
+  //   }
+  // };
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
@@ -88,7 +86,7 @@ export default function VRSessionPage() {
                   Participant ID: {patientId}
                 </Text>
                 <Text className="text-base font-bold text-green-600">
-                  Randomization ID: {randomizationId || "N/A"}
+                  Randomization ID: {RandomizationId || "N/A"}
                 </Text>
               </View>
 
@@ -117,7 +115,7 @@ export default function VRSessionPage() {
             icon="📋"
             title="Pre VR Questionnaires"
             subtitle="Complete pre-session assessments and evaluations"
-            onPress={() => navigation.navigate("PreVRAssessment", { patientId, age, studyId })}
+            onPress={() => navigation.navigate("PreVRAssessment", { patientId, age, studyId,RandomizationId })}
             className="bg-white border border-gray-200 shadow-sm"
           />
 
@@ -125,7 +123,7 @@ export default function VRSessionPage() {
             icon="🎮"
             title="VR Session Setup"
             subtitle="Configure and initialize VR therapy session parameters"
-            onPress={() => navigation.navigate("SessionSetupScreen", { patientId, age, studyId })}
+            onPress={() => navigation.navigate("SessionSetupScreen", { patientId, age, studyId,RandomizationId,Gender,phoneNumber })}
             className="bg-white border border-gray-200 shadow-sm"
           />
 
@@ -133,7 +131,7 @@ export default function VRSessionPage() {
             icon="📋"
             title="Post VR Questionnaires"
             subtitle="Complete post-session assessments and evaluations"
-            onPress={() => navigation.navigate("PostVRAssessment", { patientId, age, studyId })}
+            onPress={() => navigation.navigate("PostVRAssessment", { patientId, age, studyId,RandomizationId })}
             className="bg-white border border-gray-200 shadow-sm"
           />
 
@@ -141,7 +139,7 @@ export default function VRSessionPage() {
             icon="⚠️"
             title="Adverse Event Reporting Form"
             subtitle="Document and report any adverse events during VR sessions"
-            onPress={() => navigation.navigate("AdverseEventForm", { patientId, age, studyId })}
+            onPress={() => navigation.navigate("AdverseEventForm", { patientId, age, studyId,RandomizationId })}
             className="bg-white border border-gray-200 shadow-sm"
           />
         </View>

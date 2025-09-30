@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Modal, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 type DropdownOption = { label: string; value: string };
 
 interface DropdownFieldProps {
-  label: string;
+  label?: string;
   value: string;
   onValueChange: (val: string) => void;
   options: DropdownOption[];
