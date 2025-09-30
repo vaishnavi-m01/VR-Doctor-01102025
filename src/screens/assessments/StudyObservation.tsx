@@ -884,25 +884,47 @@ const StudyObservation = () => {
           </View>
         </FormCard>
 
-
         <Modal
           visible={showFactGForm}
           animationType="slide"
-          onRequestClose={closeFactGModal}
           transparent={true}
+          onRequestClose={closeFactGModal}
         >
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', }}>
-            <ScrollView>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+            <View
+              style={{
+                backgroundColor: 'white',
+                borderRadius: 16,
+                padding: 20,
+                width: '98%',
+                maxHeight: '80%',
+                // shadowColor: '#000',
+                // shadowOffset: { width: 0, height: 4 },
+                // shadowOpacity: 0.3,
+                // shadowRadius: 6,
+                elevation: 8,
+              }}
+            >
+              {/* Close button */}
               <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
-                <Pressable onPress={closeFactGModal}>
-                  <Text style={{ color: 'red', marginTop: 20, marginRight: 20 }}>Close</Text>
+                <Pressable
+                  onPress={closeFactGModal}
+                  style={{
+                    backgroundColor: '#f87171',
+                    borderRadius: 20,
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                  }}
+                >
+                  <Text style={{ color: 'white', fontWeight: '600' }}>Close</Text>
                 </Pressable>
               </View>
-              <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 10 }}>
-                <FactGForm />
 
-              </View>
-            </ScrollView>
+              {/* Scrollable form */}
+              <ScrollView showsVerticalScrollIndicator={false}>
+                <FactGForm />
+              </ScrollView>
+            </View>
           </View>
         </Modal>
 
