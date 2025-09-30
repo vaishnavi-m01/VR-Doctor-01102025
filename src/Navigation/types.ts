@@ -9,7 +9,7 @@ export type RootStackParamList = {
   PreVRAssessment: { patientId: number,age:number,studyId:number };
   PostVRAssessment: { patientId: number,age:number,studyId:number };
   PreAndPostVR: { patientId: number,age:number,studyId:number };
-  DistressThermometerScreen: { patientId: number,age:number,studyId:number };
+  DistressThermometerScreen: { patientId: number,age:number,studyId:number,isBaseline?:boolean };
   EdmontonFactGScreen: { patientId: number,age:number,studyId:number };
   AdverseEventForm: { patientId: number,age:number,studyId:number };
   StudyObservation: { patientId: number,age:number,studyId:number };
@@ -17,6 +17,7 @@ export type RootStackParamList = {
   ExitInterview: { patientId: number,age:number,studyId:number };
   DoctorDashboard: undefined;
   PhysicianDashboard: undefined;
+  VRSessionPage: { patientId: number, age: number, studyId: number, sessionNo?: string, sessionType?: string };
   SessionSetupScreen: {patientId?:number,age?:number,studyId?:number};
   ParticipantInfo: { patientId: number,age:number,studyId:number };
   SessionControlScreen: {patientId?: number,studyId?:number; age?:number,therapy?:string; backgroundMusic?:string;language?:string;session?:string,SessionNo?:string };

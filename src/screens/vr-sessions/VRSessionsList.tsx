@@ -23,10 +23,29 @@ interface VRSession {
   ModifiedDate: string | null;
 }
 
-export default function VRSessionsList() {
+interface VRSessionsListProps {
+  patientId?: number;
+  age?: number;
+  studyId?: number;
+}
+
+export default function VRSessionsList(props?: VRSessionsListProps) {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'VRSessionsList'>>();
-  const { patientId, age, studyId } = route.params as { patientId: number, age: number, studyId: number };
+  
+  // Use props if available, otherwise use route params
+  const { 
+    patientId = props?.patientId || 0, 
+    age = props?.age || 0, 
+    studyId = props?.studyId || 0 
+  } = route.params || {};
+  
+  console.log('🔍 VRSessionsList Debug:');
+  console.log('  Props:', props);
+  console.log('  Route params:', route.params);
+  console.log('  Final patientId:', patientId);
+  console.log('  Final age:', age);
+  console.log('  Final studyId:', studyId);
 
   const [sessions, setSessions] = useState<VRSession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -195,36 +214,18 @@ export default function VRSessionsList() {
 
   const handleSessionPress = async (session: VRSession) => {
     try {
-      console.log(' Fetching session details for:', session.SessionNo);
-
-      const response = await apiService.post<{ ResponseData: any[] }>('/GetParticipantVRSessionsMainData', {
-        SessionNo: session.SessionNo,
-        ParticipantId: patientId,
-        StudyId: "CS-0001"
+      console.log(' Navigating to VR Session page for:', session.SessionNo);
+      
+      // Navigate to VR Session page with the 4 menu items
+      navigation.navigate('VRSessionPage', {
+        patientId,
+        age,
+        studyId,
+        sessionNo: session.SessionNo,
+        sessionType: session.SessionType,
       });
-
-      console.log(' Session details API response:', response.data);
-
-      if (response.data?.ResponseData && response.data.ResponseData.length > 0) {
-        const sessionDetails = response.data.ResponseData[0];
-        console.log(' Session details loaded:', sessionDetails);
-
-        // Navigate to session details screen with the fetched data
-        (navigation as any).navigate('SessionDetailsScreen', {
-          patientId,
-          age,
-          studyId,
-          sessionDetails,
-          SessionNo: session.SessionNo,
-        });
-      } else {
-        console.log(' No session details found');
-        navigation.navigate('SessionSetupScreen', { patientId, age, studyId });
-      }
     } catch (err) {
-      console.error(' Error fetching session details:', err);
-      // Fallback to session setup on error
-      navigation.navigate('SessionSetupScreen', { patientId, age, studyId });
+      console.error(' Error navigating to VR Session page:', err);
     }
   };
 
@@ -233,18 +234,21 @@ export default function VRSessionsList() {
       {/* Participant Info Header */}
       <View className="px-4 pb-1" style={{ paddingTop: 8 }}>
 
-        <View className="bg-white border-b-2 border-gray-300 rounded-xl p-6 flex-row justify-between items-center shadow-sm">
-          <Text className="text-lg font-bold text-green-600">
-            Participant ID: {patientId}
-          </Text>
+        <View className="bg-white border-b-2 border-gray-300 rounded-xl p-6 shadow-sm">
+          <View className="space-y-2">
+            <View className="flex-row justify-between items-center">
+              <Text className="text-base font-bold text-green-600">
+                Participant ID: {patientId}
+              </Text>
+              <Text className="text-base font-semibold text-gray-700">
+                Age: {age || "Not specified"}
+              </Text>
+            </View>
 
-          <Text className="text-base font-semibold text-green-600">
-            Randomization ID: {randomizationId || "N/A"}
-          </Text>
-
-          <Text className="text-base font-semibold text-gray-700">
-            Age: {age || "Not specified"}
-          </Text>
+            <Text className="text-base font-bold text-green-600">
+              Randomization ID: {randomizationId || "N/A"}
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -288,7 +292,7 @@ export default function VRSessionsList() {
             </Text>
           </View>
         ) : (
-          <View className="space-y-3">
+          <View className="space-y-6">
             {sessions.map((session, index) => (
               <TouchableOpacity
                 key={session.SessionNo}

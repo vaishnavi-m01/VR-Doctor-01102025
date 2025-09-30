@@ -17,6 +17,7 @@ import TabPills from '../../components/TabPills';
 import ParticipantInfo from './components/participant_info';
 import AssessmentTab from './components/assesment/AssessmentTab';
 import VRTab from './components/VRTab';
+import VRSessionsList from '../vr-sessions/VRSessionsList';
 import OrientationTab from './components/OrientationTab';
 import Dashboard from './components/Dashboard';
 import { RootStackParamList } from '../../Navigation/types';
@@ -577,7 +578,7 @@ export default function ParticipantAssessmentSplit() {
       case 'assessment':
         return <AssessmentTab patientId={patientId} age={age} studyId={studyId} groupType={sel?.groupType} />;
       case ' VR':
-        return <VRTab patientId={patientId} age={age} studyId={studyId} />;
+        return <VRSessionsList patientId={patientId} age={age} studyId={studyId} />;
       case 'notification':
         return null;
       default:

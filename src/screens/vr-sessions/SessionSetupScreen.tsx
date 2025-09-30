@@ -1,13 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext, useCallback } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import Card from '../../components/Card';
-import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import { RouteProp, useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../Navigation/types';
-import { apiService } from 'src/services';
+import { apiService, vrTherapyApi } from 'src/services';
+import { UserContext } from 'src/store/context/UserContext';
+import Toast from 'react-native-toast-message';
 
 export default function SessionSetupScreen() {
   const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { userId } = useContext(UserContext);
   const [cat, setCat] = useState('Guided imagery');
   console.log("Therapy", cat)
   const [instr, setInstr] = useState('Flute');
@@ -16,33 +19,72 @@ export default function SessionSetupScreen() {
   console.log("language", lang)
   const [sess, setSess] = useState('Relaxation');
   const [randomizationId, setRandomizationId] = useState("");
+  const [gender, setGender] = useState("");
+  const [contactNumber, setContactNumber] = useState("");
   const route = useRoute<RouteProp<RootStackParamList, 'SessionSetupScreen'>>();
-  const { patientId, age, studyId } = route.params as { patientId: number, age: number, studyId: number };
+  const { patientId = 0, age = 0, studyId = 0 } = route.params || {};
+  
+  console.log('🔍 SessionSetupScreen Debug:');
+  console.log('  Route params:', route.params);
+  console.log('  Extracted patientId:', patientId);
+  console.log('  Extracted age:', age);
+  console.log('  Extracted studyId:', studyId);
 
   const ready = !!cat && !!instr && !!lang && !!sess;
 
-  useEffect(() => {
-    fetchRandomizationId(patientId.toString());
-  }, [patientId]);
+  // Load participant details when screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      console.log('🔄 SessionSetupScreen useFocusEffect triggered with patientId:', patientId);
+      if (patientId && patientId > 0) {
+        console.log('✅ PatientId is valid, calling fetchRandomizationId');
+        fetchRandomizationId(patientId.toString());
+      } else {
+        console.log('❌ PatientId is invalid or missing:', patientId);
+      }
+    }, [patientId])
+  );
 
   const fetchRandomizationId = async (participantIdParam: string) => {
     try {
-      const response = await apiService.post('/GetParticipantDetails', {
+      console.log('🔍 SessionSetupScreen: Fetching participant details for ID:', participantIdParam);
+      
+      const response = await apiService.post<{ ResponseData: any }>('/GetParticipantDetails', {
         ParticipantId: participantIdParam,
       });
 
-      console.log('Randomization ID API response:', response.data);
+      console.log('📊 SessionSetupScreen: Randomization ID API response:', response.data);
+      console.log('📊 SessionSetupScreen: Full response:', JSON.stringify(response.data, null, 2));
+      
       const data = response.data?.ResponseData;
-      console.log('Randomization ID data:', data);
+      console.log('📋 SessionSetupScreen: Randomization ID data:', data);
+      console.log('📋 SessionSetupScreen: Data type:', typeof data);
+      console.log('📋 SessionSetupScreen: Data keys:', data ? Object.keys(data) : 'No data');
       
       if (data && data.GroupTypeNumber) {
-        console.log('Setting randomization ID:', data.GroupTypeNumber);
+        console.log('✅ SessionSetupScreen: Setting randomization ID:', data.GroupTypeNumber);
         setRandomizationId(data.GroupTypeNumber);
       } else {
-        console.log('No GroupTypeNumber found in response');
+        console.log('❌ SessionSetupScreen: No GroupTypeNumber found in response');
+        setRandomizationId("Not Available");
+      }
+
+      // Set additional participant details
+      if (data) {
+        console.log('📋 SessionSetupScreen: Setting gender:', data.Gender);
+        console.log('📋 SessionSetupScreen: Setting contact number:', data.PhoneNumber);
+        setGender(data.Gender || "Not specified");
+        setContactNumber(data.PhoneNumber || "Not specified");
+      } else {
+        console.log('❌ SessionSetupScreen: No data found for additional details');
+        setGender("Not Available");
+        setContactNumber("Not Available");
       }
     } catch (error) {
-      console.error('Error fetching randomization ID:', error);
+      console.error('💥 SessionSetupScreen: Error fetching randomization ID:', error);
+      setRandomizationId("Error Loading");
+      setGender("Error Loading");
+      setContactNumber("Error Loading");
     }
   };
 
@@ -53,18 +95,36 @@ export default function SessionSetupScreen() {
       </View> */}
 
       <View className="px-4 pt-4">
-        <View className="bg-white border-b border-gray-200 rounded-xl p-6 flex-row justify-between items-center shadow-sm">
-          <Text className="text-lg font-bold text-green-600">
-            Participant ID: {patientId}
-          </Text>
-
-          <Text className="text-base font-semibold text-green-600">
-            Randomization ID: {randomizationId || "N/A"}
-          </Text>
-
-          <Text className="text-base font-semibold text-gray-700">
-            Age: {age || "Not specified"}
-          </Text>
+        <View className="bg-white border-b border-gray-200 rounded-xl p-6 shadow-sm">
+          <Text className="text-lg font-bold text-gray-800 mb-4">Participant Profile</Text>
+          
+          {/* Participant Details Grid */}
+          <View className="flex-row flex-wrap gap-4">
+            <View className="flex-1 min-w-[150px]">
+              <Text className="text-sm text-gray-600">Participant ID</Text>
+              <Text className="text-base font-semibold text-green-600">{patientId}</Text>
+            </View>
+            
+            <View className="flex-1 min-w-[150px]">
+              <Text className="text-sm text-gray-600">Randomization ID</Text>
+              <Text className="text-base font-semibold text-green-600">{randomizationId || "N/A"}</Text>
+            </View>
+            
+            <View className="flex-1 min-w-[150px]">
+              <Text className="text-sm text-gray-600">Age</Text>
+              <Text className="text-base font-semibold text-gray-700">{age || "Not specified"}</Text>
+            </View>
+            
+            <View className="flex-1 min-w-[150px]">
+              <Text className="text-sm text-gray-600">Gender</Text>
+              <Text className="text-base font-semibold text-gray-700">{gender || "Not specified"}</Text>
+            </View>
+            
+            <View className="flex-1 min-w-[150px]">
+              <Text className="text-sm text-gray-600">Contact Number</Text>
+              <Text className="text-base font-semibold text-gray-700">{contactNumber || "Not specified"}</Text>
+            </View>
+          </View>
         </View>
       </View>
 
@@ -184,38 +244,131 @@ export default function SessionSetupScreen() {
                 <Text className="text-green-600 text-xl">▶</Text>
               </View>
               <View className="flex-1">
-                <Text className="font-bold text-base text-gray-800">Start Session</Text>
+                <Text className="font-bold text-base text-gray-800">
+                  
+                </Text>
                 <Text className="text-sm text-gray-500">Begin a new VR Therapy Session</Text>
               </View>
             </View>
 
-            <Pressable
-              disabled={!ready}
-              onPress={() => {
-                console.log("Navigate with:", {
-                  patientId,
-                  studyId,
-                  therapy: cat,
-                  backgroundMusic: instr,
-                  language: lang,
-                  session: sess,
-                });
+              <Pressable
+                disabled={!ready}
+                onPress={async () => {
+                    try {
+                      if (!userId) {
+                        Toast.show({
+                          type: 'error',
+                          text1: 'Error',
+                          text2: 'User ID not found. Please login again.',
+                        });
+                        return;
+                      }
 
-                nav.navigate("SessionControlScreen", {
-                  patientId,
-                  studyId,
-                  therapy: cat,
-                  backgroundMusic: instr,
-                  language: lang,
-                  session: sess,
-                });
-              }}
+                      if (!patientId || patientId === 0) {
+                        Toast.show({
+                          type: 'error',
+                          text1: 'Error',
+                          text2: 'Patient ID not found. Please navigate from a valid participant.',
+                        });
+                        return;
+                      }
 
-              className={`px-6 py-3 rounded-xl ${ready ? 'bg-green-600' : 'bg-gray-300'
-                }`}
-            >
-              <Text className="text-white font-bold">Startt</Text>
-            </Pressable>
+                      console.log("Starting VR session with:", {
+                        patientId,
+                        studyId,
+                        therapy: cat,
+                        backgroundMusic: instr,
+                        language: lang,
+                        session: sess,
+                        ready: ready,
+                        userId: userId
+                      });
+
+                      // Check if all required parameters are available
+                      if (!cat || !instr || !lang || !sess) {
+                        Toast.show({
+                          type: 'error',
+                          text1: 'Missing Parameters',
+                          text2: 'Please select all session parameters',
+                        });
+                        return;
+                      }
+
+                      // Debug authentication state
+                      vrTherapyApi.debugAuthState();
+
+                      // Set scene command (VR API will handle its own authentication)
+                      console.log("🎬 Setting scene command...");
+                      const sceneName = vrTherapyApi.getSceneNameForTherapy(cat);
+                      await vrTherapyApi.setSceneCommand({
+                        userId: userId,
+                        sceneName: sceneName
+                      });
+                      console.log("✅ Scene command set successfully");
+
+                      // Set therapy parameters
+                      console.log("🎛️ Setting therapy parameters...");
+                      await vrTherapyApi.setTherapyParams({
+                        userId: userId,
+                        treatment: cat,
+                        language: vrTherapyApi.getLanguageForAPI(lang),
+                        instrument: vrTherapyApi.getInstrumentForAPI(instr),
+                        isHindu: vrTherapyApi.getHinduContext(lang)
+                      });
+                      console.log("✅ Therapy parameters set successfully");
+
+                      // Set session info
+                      console.log("📋 Setting session info...");
+                      await vrTherapyApi.setSessionInfo({
+                        ParticipantID: patientId.toString(),
+                        ParticipantName: `Participant ${patientId}`, // Using participant ID as name since we don't have actual name
+                        SessionDuration: "25:00", // Default duration, could be made configurable
+                        isActive: true,
+                        LastSession: new Date().toISOString()
+                      });
+                      console.log("✅ Session info set successfully");
+
+                      // Set therapy command to play
+                      console.log("▶️ Setting therapy command to play...");
+                      await vrTherapyApi.setTherapyCommand({
+                        userId: userId,
+                        command: "play"
+                      });
+                      console.log("✅ Therapy command set successfully");
+
+                      Toast.show({
+                        type: 'success',
+                        text1: 'VR Session Started',
+                        text2: 'VR therapy parameters have been set successfully.',
+                      });
+
+                      // Navigate to session control screen
+                      console.log("🧭 Navigating to SessionControlScreen...");
+                      nav.navigate("SessionControlScreen", {
+                        patientId,
+                        studyId,
+                        therapy: cat,
+                        backgroundMusic: instr,
+                        language: lang,
+                        session: sess,
+                      });
+                      console.log("✅ Navigation completed");
+
+                    } catch (error) {
+                      console.error('Error starting VR session:', error);
+                      Toast.show({
+                        type: 'error',
+                        text1: 'Error',
+                        text2: 'Failed to start VR session. Please try again.',
+                      });
+                    }
+                  }}
+
+                className={`px-6 py-3 rounded-xl ${ready ? 'bg-green-600' : 'bg-gray-300'
+                  }`}
+              >
+                <Text className="text-white font-bold">Start Session</Text>
+              </Pressable>
 
           </View>
         </Card>

@@ -34,6 +34,7 @@ import SessionSetupScreen from './src/screens/vr-sessions/SessionSetupScreen';
 import ParticipantInfo from './src/screens/patients/components/participant_info';
 import SessionControlScreen from './src/screens/vr-sessions/SessionControlScreen';
 import SessionCompletedScreen from './src/screens/vr-sessions/SessionCompletedScreen';
+import VRSessionPage from './src/screens/vr-sessions/VRSessionPage';
 import Screening from './src/screens/assessments/Screening';
 import FactG from './src/screens/assessments/FactG';
 import { RootStackParamList } from './src/Navigation/types';
@@ -175,6 +176,12 @@ export default function App() {
                     />
 
                     {/* VR/Session Flow */}
+                    <Stack.Screen
+                      name="VRSessionPage"
+                      component={VRSessionPage}
+                      options={{ headerShown: true, title: "VR Session" }}
+                    />
+
                     <Stack.Screen
                       name="VRSessionsList"
                       component={VRSessionsList}

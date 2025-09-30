@@ -158,7 +158,11 @@ const computeScores = (answers: Record<string, number | null>, subscales: Subsca
 };
 
 
-export default function FactGForm() {
+interface FactGFormProps {
+  onClose?: () => void;
+}
+
+export default function FactGForm({ onClose }: FactGFormProps = {}) {
   const [answers, setAnswers] = useState<Record<string, number | null>>({});
   const [subscales, setSubscales] = useState<Subscale[]>([]);
   const [loading, setLoading] = useState(false);
@@ -548,19 +552,24 @@ setAnswers(existingAnswers);
           topOffset: 50,
           visibilityTime: 1000,
           onHide: () => {
-            navigation.goBack();
-            const navState = navigation.getState();
+            // Call onClose callback if provided, otherwise navigate back
+            if (onClose) {
+              onClose();
+            } else {
+              navigation.goBack();
+              const navState = navigation.getState();
 
-            // Check if navState exists before using it
-            if (navState && navState.routes) {
-              navigation.reset({
-                index: 0,
-                routes: navState.routes.map((r) =>
-                  r.name === "PatientScreening"
-                    ? { ...r, params: { ...(r.params ?? {}), CreatedDate: createdDate, PatientId: patientId } }
-                    : r
-                ) as any,
-              });
+              // Check if navState exists before using it
+              if (navState && navState.routes) {
+                navigation.reset({
+                  index: 0,
+                  routes: navState.routes.map((r) =>
+                    r.name === "PatientScreening"
+                      ? { ...r, params: { ...(r.params ?? {}), CreatedDate: createdDate, PatientId: patientId } }
+                      : r
+                  ) as any,
+                });
+              }
             }
           },
 

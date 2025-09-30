@@ -702,8 +702,11 @@ const fetchBaselineScores = async (participantId: string, studyId: string) => {
   };
 
   const closeFactGModal = () => {
-  setShowFactGForm(false); 
-};
+    setShowFactGForm(false);
+    // Refresh baseline scores after FactG form is closed
+    const participantId = `${routePatientId}`;
+    fetchBaselineScores(participantId, `${studyId}`);
+  };
 
 
   const renderTextField = (sofid: string, label: string, placeholder?: string, multiline = false) => {

@@ -23,6 +23,7 @@ export default function SessionControlScreen() {
   const [medicalHistoryCreatedDate, setMedicalHistoryCreatedDate] = useState("");
   const [doctorNotes, setDoctorNotes] = useState("");
   const [randomizationId, setRandomizationId] = useState("");
+  const [gender, setGender] = useState("");
   const { userId } = useContext(UserContext);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
@@ -62,7 +63,7 @@ export default function SessionControlScreen() {
             setPhoneNumber(data.PhoneNumber ?? "");
             setMedicalHistoryCreatedDate(formatDateDDMMYYYY(data.MedicalHistoryCreatedDate));
             setRandomizationId(data.GroupTypeNumber ?? "");
-
+            setGender(data.Gender ?? "Not specified");
           }
         } catch (err) {
           console.error(err);
@@ -173,20 +174,24 @@ export default function SessionControlScreen() {
               {/* Participant Details */}
               <View className="gap-2">
                 <View className="flex-row justify-between py-1">
-                  <Text className="text-sm text-gray-600">Name:</Text>
-                  <Text className="text-sm font-medium">Martin Sangma</Text>
+                  <Text className="text-sm text-gray-600">Participant ID:</Text>
+                  <Text className="text-sm font-medium text-green-600">{patientId}</Text>
+                </View>
+                <View className="flex-row justify-between py-1">
+                  <Text className="text-sm text-gray-600">Randomization ID:</Text>
+                  <Text className="text-sm font-medium text-green-600">{randomizationId || "N/A"}</Text>
                 </View>
                 <View className="flex-row justify-between py-1">
                   <Text className="text-sm text-gray-600">Age:</Text>
-                  <Text className="text-sm font-medium">{age}</Text>
+                  <Text className="text-sm font-medium">{age || "Not specified"}</Text>
                 </View>
                 <View className="flex-row justify-between py-1">
-                  <Text className="text-sm text-gray-600">Date:</Text>
-                  <Text className="text-sm font-medium">{medicalHistoryCreatedDate}</Text>
+                  <Text className="text-sm text-gray-600">Gender:</Text>
+                  <Text className="text-sm font-medium">{gender || "Not specified"}</Text>
                 </View>
                 <View className="flex-row justify-between py-1">
                   <Text className="text-sm text-gray-600">Contact Number:</Text>
-                  <Text className="text-sm font-medium">{phoneNumber}</Text>
+                  <Text className="text-sm font-medium">{phoneNumber || "Not specified"}</Text>
                 </View>
               </View>
             </Card>

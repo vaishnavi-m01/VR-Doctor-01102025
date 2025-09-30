@@ -187,6 +187,7 @@ export class AuthService {
       await Promise.all([
         AsyncStorage.setItem(STORAGE_KEYS.USER_TOKEN, loginUser.token),
         AsyncStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(user)),
+        AsyncStorage.setItem('userId', user.UserID), // Store userId separately for backward compatibility
         AsyncStorage.setItem('login_email', credentials.Email),
         AsyncStorage.setItem('login_password', credentials.Password),
       ]);
@@ -214,6 +215,7 @@ export class AuthService {
       await Promise.all([
         AsyncStorage.removeItem(STORAGE_KEYS.USER_TOKEN),
         AsyncStorage.removeItem(STORAGE_KEYS.USER_PROFILE),
+        AsyncStorage.removeItem('userId'), // Remove userId for backward compatibility
         AsyncStorage.removeItem('login_email'),
         AsyncStorage.removeItem('login_password'),
       ]);

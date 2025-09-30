@@ -56,6 +56,11 @@ export default function PatientScreening() {
   const { patientId, age, studyId } = route.params as { patientId: number; age: number; studyId: number };
   const { userId } = useContext(UserContext);
   const [checked, setChecked] = useState(false);
+  
+  // Distress Thermometer state
+  const [distressSelectedProblems, setDistressSelectedProblems] = useState<{ [key: string]: boolean }>({});
+  const [distressNotes, setDistressNotes] = useState('');
+  const [otherProblems, setOtherProblems] = useState('');
 
   const routes = useRoute();
   const { CreatedDate: routeCreatedDate, PatientId: routePatientId } = (routes.params as any) ?? {};
@@ -119,6 +124,13 @@ export default function PatientScreening() {
     }
   };
 
+  // Toggle distress problem selection
+  const toggleDistressProblem = (problemId: string) => {
+    setDistressSelectedProblems(prev => ({
+      ...prev,
+      [problemId]: !prev[problemId]
+    }));
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -373,43 +385,60 @@ export default function PatientScreening() {
         </FormCard>
 
         <FormCard icon="I" title="Medical Details">
-          <View className="flex-row items-center justify-between mb-2">
-            <Text
-              className={`text-md font-medium ${errors.dt ? "text-red-500" : "text-[#2c4a43]"}`}
-            >
-              Distress Thermometer (0–10)
-            </Text>
-
+          <View className="flex-row gap-3 mb-2">
             <Pressable
               onPress={() => {
-
                 navigation.navigate("DistressThermometerScreen", {
                   patientId,
                   age,
                   studyId,
                 });
               }}
-              className="px-4 py-3 bg-[#0ea06c] rounded-lg"
+              className="flex-1 px-4 py-3 bg-[#0ea06c] rounded-lg"
             >
-              <Text className="text-xs text-white font-medium">
+              <Text className="text-sm text-white font-medium text-center">
                 Assessment: Distress Thermometer scoring 0-10
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() =>
+                navigation.navigate('EdmontonFactGScreen', { patientId, age, studyId })
+              }
+              className="flex-1 px-4 py-3 bg-[#0ea06c] rounded-lg"
+            >
+              <Text className="text-sm text-white font-medium text-center">
+                Assessment: Fact-G scoring 0-108
               </Text>
             </Pressable>
           </View>
 
+          <Field
+            label="Fact-G Total Score"
+            keyboardType="number-pad"
+            value={factGScore?.toString() || ''}
+            onChangeText={(text) => {
+              setFactGScore(text);
+              if (errors.factGScore) {
+                setErrors((prev) => ({ ...prev, factGScore: "" }));
+              }
+            }}
+            error={errors.factGScore}
+            placeholder="Enter Fact-G Total Score (0-108)"
+          />
 
-          <Thermometer
-            value={dt}
-            onChange={(value) => {
-              setDt(value);
-
+          <Field
+            label="Distress Thermometer Value"
+            keyboardType="number-pad"
+            value={dt?.toString() || ''}
+            onChangeText={(text) => {
+              setDt(text);
               if (errors.dt) {
                 setErrors((prev) => ({ ...prev, dt: "" }));
               }
             }}
+            error={errors.dt}
+            placeholder="Enter Distress Value (0-10)"
           />
-
-
 
           {/* <View className="flex-row gap-3 mt-6"> */}
           {/* <View className="flex-1"> */}
@@ -427,44 +456,11 @@ export default function PatientScreening() {
                   <Text className="text-xs text-white font-medium">Assessment: Fact-G scoring 0-108</Text>
                 </Pressable> */}
           {/* </View> */}
-          {/* <Field
-                label="FACT-G Total Score"
-                keyboardType="number-pad"
-                placeholder="0–108"
-                value={factGScore}
-                error={errors.factGScore}
-                editable={false}
-                onChangeText={setFactGScore}
-              /> */}
           {/* </View> */}
           {/* </View> */}
 
 
-          <View className="flex-row items-center justify-between mt-10">
-            <View className="flex-1 mr-2">
-              <Field
-                label="FACT-G Total Score"
-                keyboardType="number-pad"
-                placeholder="0–108"
-                value={factGScore}
-                error={errors.factGScore}
-                editable={false}
-                onChangeText={setFactGScore}
-              />
-            </View>
 
-            <Pressable
-              onPress={() =>
-                navigation.navigate('EdmontonFactGScreen', { patientId, age, studyId })
-              }
-              className="px-4 py-3 bg-[#0ea06c] rounded-lg"
-              style={{ top: -38 }}
-            >
-              <Text className="text-xs text-white font-medium">
-                Assessment: Fact-G scoring 0-108
-              </Text>
-            </Pressable>
-          </View>
 
 
           <Text className="text-lg mt-3 font-semibold">Vitals</Text>

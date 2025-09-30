@@ -157,7 +157,7 @@ export default function PatientDashboardScreen() {
         <Card className="p-4">
           <Text className="font-zen font-extrabold mb-2">Start New Session</Text>
           <Pressable 
-            onPress={() => nav.navigate('SessionSetupScreen' as any)} 
+            onPress={() => nav.navigate('SessionSetupScreen' as any, { patientId: 1, age: 35, studyId: 1 })} 
             className="self-start bg-[#0ea06c] px-4 py-2 rounded-xl"
           >
             <Text className="font-zen text-white font-semibold">{BUTTON_TEXTS.START_SESSION}</Text>

@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../Navigation/types';
 import { RouteProp } from '@react-navigation/native';
 import Card from '../../components/Card';
-import { apiService } from 'src/services';
+import { apiService, vrTherapyApi, authService } from 'src/services';
+import { UserContext } from 'src/store/context/UserContext';
+import Toast from 'react-native-toast-message';
 
 
 interface SessionDetails {
@@ -35,6 +37,7 @@ interface LanguageData {
 export default function SessionDetailsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'SessionDetailsScreen'>>();
+  const { userId } = useContext(UserContext);
 
   // Add safety checks for route params
   const params = route.params || {};
@@ -71,17 +74,77 @@ export default function SessionDetailsScreen() {
 
   const ready = !!cat && !!instr && !!lang && !!sess;
 
-  const handleStartSession = () => {
-    navigation.navigate('SessionControlScreen', {
-      patientId,
-      age,
-      studyId,
-      SessionNo,
-      therapy: cat,
-      backgroundMusic: instr,
-      language: lang,
-      session: sess,
-    });
+  const handleStartSession = async () => {
+    try {
+      if (!userId) {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'User ID not found. Please login again.',
+        });
+        return;
+      }
+
+      // Debug authentication state
+      vrTherapyApi.debugAuthState();
+
+      // Set scene command (VR API will handle its own authentication)
+      const sceneName = vrTherapyApi.getSceneNameForTherapy(cat);
+      await vrTherapyApi.setSceneCommand({
+        userId: userId,
+        sceneName: sceneName
+      });
+
+      // Set therapy parameters
+      await vrTherapyApi.setTherapyParams({
+        userId: userId,
+        treatment: cat,
+        language: vrTherapyApi.getLanguageForAPI(lang),
+        instrument: vrTherapyApi.getInstrumentForAPI(instr),
+        isHindu: vrTherapyApi.getHinduContext(lang)
+      });
+
+      // Set session info
+      await vrTherapyApi.setSessionInfo({
+        ParticipantID: patientId.toString(),
+        ParticipantName: `Participant ${patientId}`, // Using participant ID as name since we don't have actual name
+        SessionDuration: "25:00", // Default duration, could be made configurable
+        isActive: true,
+        LastSession: new Date().toISOString()
+      });
+
+      // Set therapy command to play
+      await vrTherapyApi.setTherapyCommand({
+        userId: userId,
+        command: "play"
+      });
+
+      Toast.show({
+        type: 'success',
+        text1: 'VR Session Started',
+        text2: 'VR therapy parameters have been set successfully.',
+      });
+
+      // Navigate to session control screen
+      navigation.navigate('SessionControlScreen', {
+        patientId,
+        age,
+        studyId,
+        SessionNo,
+        therapy: cat,
+        backgroundMusic: instr,
+        language: lang,
+        session: sess,
+      });
+
+    } catch (error) {
+      console.error('Error starting VR session:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to start VR session. Please try again.',
+      });
+    }
   }
 
 

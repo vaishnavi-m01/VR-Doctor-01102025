@@ -28,7 +28,7 @@ export default function HomeTab() {
       title: 'Session Management',
       subtitle: 'VR session setup and control',
       route: 'SessionSetupScreen',
-       params: { }
+       params: { patientId: 1, age: 35, studyId: 1 }
     },
     {
       id: 'assessments',
@@ -79,7 +79,7 @@ export default function HomeTab() {
             <Text className="text-white font-semibold text-center">Add Participant</Text>
           </Pressable>
           <Pressable
-            onPress={() => navigation.navigate('SessionSetupScreen',{})}
+            onPress={() => navigation.navigate('SessionSetupScreen', { patientId: 1, age: 35, studyId: 1 })}
             className="flex-1 bg-[#0ea06c] rounded-xl p-4 items-center"
           >
             <Text className="text-white font-semibold text-center">Start Session</Text>

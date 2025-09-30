@@ -1,5 +1,5 @@
 // AssessmentTab.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ScrollView, Text, TextInput, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -9,6 +9,7 @@ import { Field } from '../../../../components/Field';
 import PillGroup from '../../../../components/PillGroup';
 import Segmented from '../../../../components/Segmented';
 import { RootStackParamList } from '../../../../Navigation/types';
+import { apiService } from '../../../../services';
 
 type AssessmentTabNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -21,6 +22,62 @@ interface AssessmentTabProps {
 
 const AssessmentTab = ({ patientId, age, studyId, groupType }: AssessmentTabProps) => {
   const navigation = useNavigation<AssessmentTabNavigationProp>();
+  const [hasExistingAssessments, setHasExistingAssessments] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // Check if participant has existing assessments
+  useEffect(() => {
+    const checkExistingAssessments = async () => {
+      try {
+        setLoading(true);
+        
+        // Check for existing Distress Thermometer assessments
+        const distressResponse = await apiService.post('/GetParticipantDistressWeeklyScore', {
+          ParticipantId: patientId.toString(),
+        });
+        
+        const hasDistressAssessments = distressResponse.data?.ResponseData?.length > 0;
+        
+        // Check for existing FactG assessments
+        const factGResponse = await apiService.post('/getParticipantFactGQuestionWeekly', {
+          StudyId: studyId.toString(),
+          ParticipantId: patientId.toString(),
+        });
+        
+        const hasFactGAssessments = factGResponse.data?.ResponseData?.length > 0;
+        
+        // If either assessment exists, it's not the first time
+        setHasExistingAssessments(hasDistressAssessments || hasFactGAssessments);
+      } catch (error) {
+        console.error('Error checking existing assessments:', error);
+        // Default to false if there's an error
+        setHasExistingAssessments(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkExistingAssessments();
+  }, [patientId, studyId]);
+
+  const handleDistressThermometerPress = () => {
+    if (!hasExistingAssessments) {
+      // First time assessment - route to baseline Distress Thermometer
+      navigation.navigate("DistressThermometerScreen", { 
+        patientId, 
+        age, 
+        studyId,
+        isBaseline: true 
+      });
+    } else {
+      // Existing assessments - route to regular Distress Thermometer
+      navigation.navigate("DistressThermometerScreen", { 
+        patientId, 
+        age, 
+        studyId 
+      });
+    }
+  };
 
   // State for orientation assessment items
   const [effect, setEffect] = useState<number | undefined>();
@@ -46,9 +103,8 @@ const AssessmentTab = ({ patientId, age, studyId, groupType }: AssessmentTabProp
       <AssessItem
         icon="🌡️"
         title="Distress Thermometer scoring 0-10"
-        subtitle="Assess participant distress levels and identify problem areas"
-        // onPress={() => navigation.navigate('DistressThermometerList', { patientId,age })}
-        onPress={() => navigation.navigate("DistressThermometerScreen", { patientId, age,studyId })}
+        subtitle={hasExistingAssessments ? "Assess participant distress levels and identify problem areas" : "First time assessment - Baseline Distress Thermometer"}
+        onPress={handleDistressThermometerPress}
         className="bg-[#F6F7F7] border-[#F6F7F7]"
       />
       <AssessItem
