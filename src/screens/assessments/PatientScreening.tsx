@@ -127,7 +127,7 @@ export default function PatientScreening() {
     }
   }, [routeCreatedDate, routePatientId]);
 
-const fetchBaselineScores = async (participantId: string, studyId: string) => {
+const fetchBaselineScores = async (patientId: string, studyId: string) => {
   setBaselineLoading(true);
   try {
     let factGScore = 0;
@@ -139,7 +139,7 @@ const fetchBaselineScores = async (participantId: string, studyId: string) => {
     // Fetch FACT-G data for today only
     const factGRes = await apiService.post('/getParticipantFactGQuestionBaseline', {
       StudyId: studyId,
-      ParticipantId: participantId,
+      ParticipantId: patientId,
       CreatedDate: today,
     }) as { data: FactGResponse };
 
@@ -152,7 +152,7 @@ const fetchBaselineScores = async (participantId: string, studyId: string) => {
 
     // Fetch distress score for today only
     const distressRes = await apiService.post('/GetParticipantDistressWeeklyScore', {
-      ParticipantId: participantId,
+      ParticipantId: patientId,
       CreatedDate: todayStr,
     }) as { data: DistressWeeklyResponse };
 
@@ -186,10 +186,17 @@ const fetchBaselineScores = async (participantId: string, studyId: string) => {
   }
 };
 
+useEffect(() => {
+  if (route.params?.patientId) {
+    setParticipantId(route.params.patientId.toString());
+  }
+}, [route.params]);
+
   useEffect(() => {
-    const participantId = `${routePatientId}`;
-    fetchBaselineScores(participantId, `${studyId}`);
-  }, [routePatientId, studyId]);
+  if (patientId && studyId) {
+    fetchBaselineScores(patientId, studyId);
+  }
+}, [patientId, studyId]);
 
   // Toggle distress problem selection
   const toggleDistressProblem = (problemId: string) => {

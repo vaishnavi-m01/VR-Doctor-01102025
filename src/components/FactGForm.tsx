@@ -154,8 +154,10 @@ const fetchFactG = async () => {
 
     // Pass empty strings explicitly for ParticipantId and StudyId to load unfiltered questions
     const payload: any = {
-      ParticipantId: "",
-      StudyId: "",
+      // ParticipantId: "",
+      // StudyId: "",
+        ParticipantId: patientId ,
+      StudyId: studyId ,
     };
 
     const response = await apiService.post<FactGResponse>(

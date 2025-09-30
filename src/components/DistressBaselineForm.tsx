@@ -275,7 +275,7 @@ export default function DistressBaselineForm() {
           : "Distress thermometer updated successfully!",
         onHide: () => {
           navigation.goBack();
-          getData(); // refresh data on close
+          getData(); 
         },
       });
     } catch (err: any) {
