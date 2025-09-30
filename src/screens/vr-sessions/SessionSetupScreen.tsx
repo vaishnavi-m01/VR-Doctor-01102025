@@ -20,7 +20,7 @@ export default function SessionSetupScreen() {
   const [sess, setSess] = useState('Relaxation');
 
   const route = useRoute<RouteProp<RootStackParamList, 'SessionSetupScreen'>>();
-  const { patientId , age , studyId ,RandomizationId,Gender,phoneNumber } = route.params || {};
+  const { patientId , age , studyId ,RandomizationId,Gender,phoneNumber,sessionNo } = route.params || {};
   
   console.log('🔍 SessionSetupScreen Debug:');
   console.log('  Route params:', route.params);
@@ -266,26 +266,27 @@ export default function SessionSetupScreen() {
                       console.log("📋 Setting session info...");
                       await vrTherapyApi.setSessionInfo({
                         ParticipantID: patientId.toString(),
-                        ParticipantName: `Participant ${patientId}`, // Using participant ID as name since we don't have actual name
-                        SessionDuration: "25:00", // Default duration, could be made configurable
+                        ParticipantName: `Participant ${patientId}`, 
+                        SessionDuration: "25:00", 
                         isActive: true,
+                        userId:userId,
                         LastSession: new Date().toISOString()
                       });
                       console.log("✅ Session info set successfully");
 
                       // Set therapy command to play
-                      console.log("▶️ Setting therapy command to play...");
-                      await vrTherapyApi.setTherapyCommand({
-                        userId: userId,
-                        command: "play"
-                      });
-                      console.log("✅ Therapy command set successfully");
+                      // console.log("▶️ Setting therapy command to play...");
+                      // await vrTherapyApi.setTherapyCommand({
+                      //   userId: userId,
+                      //   command: "play"
+                      // });
+                      // console.log("✅ Therapy command set successfully");
 
-                      Toast.show({
-                        type: 'success',
-                        text1: 'VR Session Started',
-                        text2: 'VR therapy parameters have been set successfully.',
-                      });
+                      // Toast.show({
+                      //   type: 'success',
+                      //   text1: 'VR Session Started',
+                      //   text2: 'VR therapy parameters have been set successfully.',
+                      // });
 
                       // Navigate to session control screen
                       console.log("🧭 Navigating to SessionControlScreen...");
@@ -296,6 +297,8 @@ export default function SessionSetupScreen() {
                         backgroundMusic: instr,
                         language: lang,
                         session: sess,
+                        SessionNo:sessionNo
+
                       });
                       console.log("✅ Navigation completed");
 

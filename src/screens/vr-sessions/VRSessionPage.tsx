@@ -123,7 +123,7 @@ export default function VRSessionPage() {
             icon="🎮"
             title="VR Session Setup"
             subtitle="Configure and initialize VR therapy session parameters"
-            onPress={() => navigation.navigate("SessionSetupScreen", { patientId, age, studyId,RandomizationId,Gender,phoneNumber })}
+            onPress={() => navigation.navigate("SessionSetupScreen", { patientId, age, studyId,RandomizationId,Gender,phoneNumber,sessionNo })}
             className="bg-white border border-gray-200 shadow-sm"
           />
 

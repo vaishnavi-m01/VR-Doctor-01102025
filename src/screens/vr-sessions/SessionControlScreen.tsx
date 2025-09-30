@@ -6,7 +6,7 @@ import SliderBar from '../../components/SliderBar';
 import { RouteProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../Navigation/types';
-import { apiService } from 'src/services';
+import { apiService, vrTherapyApi } from 'src/services';
 import { formatDateDDMMYYYY } from 'src/utils/date';
 import { UserContext } from 'src/store/context/UserContext';
 import Toast from 'react-native-toast-message';
@@ -116,6 +116,62 @@ export default function SessionControlScreen() {
       });
     }
   }
+
+
+  const sendTherapyCommand = async (command: "play" | "pause" | "skip" | "back" | "stop") => {
+    try {
+      console.log(`▶️ Setting therapy command to ${command}...`);
+
+      await vrTherapyApi.setTherapyCommand({
+        userId: userId,
+        command,
+      });
+
+      console.log(`✅ Therapy command "${command}" set successfully`);
+
+      // Toast message mapping
+      const toastMessages: Record<typeof command, { title: string; msg: string }> = {
+        play: {
+          title: "VR Session Started",
+          msg: "VR therapy parameters have been set successfully.",
+        },
+        pause: {
+          title: "VR Session Paused",
+          msg: "The therapy session has been paused.",
+        },
+        skip: {
+          title: "VR Session Skipped",
+          msg: "The current therapy section has been skipped.",
+        },
+        stop: {
+          title: "VR Session Stoped",
+          msg: "The current therapy section has been Stoped.",
+        },
+        back: {
+          title: "VR Session Rewinded",
+          msg: "Went back to the previous section.",
+        },
+      };
+
+      Toast.show({
+        type: "success",
+        text1: toastMessages[command].title,
+        text2: toastMessages[command].msg,
+        position: "top",
+        topOffset: 50,
+      });
+    } catch (err) {
+      console.error(`❌ Failed to send therapy command "${command}":`, err);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: `Failed to send "${command}" command.`,
+        position: "top",
+        topOffset: 50,
+      });
+    }
+  };
+
 
   return (
     <View className="flex-1 bg-white">
@@ -275,25 +331,42 @@ export default function SessionControlScreen() {
 
               {/* Video Preview */}
               <View className="rounded-xl h-32 bg-gradient-to-b from-gray-100 to-gray-200 mb-4 items-center justify-center">
-                <Pressable className="w-12 h-12 rounded-full bg-white shadow-md items-center justify-center">
-                  <Text className="text-xl">▶</Text>
+                <Pressable
+                  className="w-12 h-12 rounded-full bg-white shadow-md items-center justify-center"
+                  onPress={() => {
+                    if (isPlaying) {
+                      setIsPlaying(false);
+                      sendTherapyCommand("pause");
+                    } else {
+                      setIsPlaying(true);
+                      sendTherapyCommand("play");
+                    }
+                  }}
+                >
+                  <Text className="text-xl">{isPlaying ? "⏸" : "▶"}</Text>
                 </Pressable>
               </View>
 
               {/* Media Controls */}
               <View className="flex-row items-center justify-between">
-                {/* Play Button (Left) */}
+                {/* Play / Pause Button */}
                 <Pressable
-                  className={`w-12 h-12 rounded-full items-center justify-center ${isPlaying ? 'bg-green-500' : 'bg-blue-500'
+                  className={`w-12 h-12 rounded-full items-center justify-center ${isPlaying ? "bg-green-500" : "bg-blue-500"
                     }`}
-                  onPress={() => setIsPlaying(!isPlaying)}
+                  onPress={() => {
+                    if (isPlaying) {
+                      setIsPlaying(false);
+                      sendTherapyCommand("pause");
+                    } else {
+                      setIsPlaying(true);
+                      sendTherapyCommand("play");
+                    }
+                  }}
                 >
-                  <Text className="text-white text-lg">
-                    {isPlaying ? '⏸' : '▶'}
-                  </Text>
+                  <Text className="text-white text-lg">{isPlaying ? "⏸" : "▶"}</Text>
                 </Pressable>
 
-                {/* Spacer for timeline slider */}
+                {/* Timeline */}
                 <View className="flex-1 mx-3">
                   <SliderBar
                     value={currentTime / totalDuration}
@@ -301,24 +374,28 @@ export default function SessionControlScreen() {
                   />
                 </View>
 
-                {/* Stop Button (Right) */}
+
                 <Pressable
                   className="w-12 h-12 rounded-full items-center justify-center bg-red-500"
                   onPress={() => {
                     setIsPlaying(false);
                     setCurrentTime(0);
+                    // sendTherapyCommand("stop");
                   }}
                 >
                   <Text className="text-white text-lg">⏹</Text>
                 </Pressable>
 
-                {/* Settings */}
-                <Pressable className="w-8 h-8 rounded items-center justify-center bg-gray-200 ml-2">
+                {/* Back */}
+                <Pressable
+                  className="w-8 h-8 rounded items-center justify-center bg-gray-200 ml-2"
+                  onPress={() => sendTherapyCommand("back")}
+                >
                   <Text className="text-sm">⛶</Text>
                 </Pressable>
               </View>
-
             </Card>
+
 
             {/* Content and Media Controls */}
             <Card className="p-4">

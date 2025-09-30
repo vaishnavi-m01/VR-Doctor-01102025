@@ -25,7 +25,7 @@ export interface GetTherapyParamsResponse {
 }
 
 export interface SetTherapyCommandRequest {
-  userId: string;
+  userId: string | null;
   command: string;
 }
 
@@ -39,6 +39,7 @@ export interface SetSessionInfoRequest {
   SessionDuration: string;
   isActive: boolean;
   LastSession: string;
+  userId:string;
 }
 
 export interface GetSessionInfoResponse {
