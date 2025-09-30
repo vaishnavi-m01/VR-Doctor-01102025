@@ -274,7 +274,7 @@ export default function PatientScreening() {
     if (!bmi.trim()) newErrors.bmi = "BMI is required";
     else if (bmi.length > 5) newErrors.bmi = "Max 5 chars";
 
-    if (!dt || dt === 0) newErrors.dt = "Distress Thermometer score is required";
+    // if (!dt || dt === 0) newErrors.dt = "Distress Thermometer score is required";
 
     if (!implants) {
       newErrors.implants = "Select Yes/No for implants";
@@ -282,15 +282,15 @@ export default function PatientScreening() {
     if (!prosthetics) {
       newErrors.prosthetics = "Select Yes/No for prosthetics";
     }
-    if (conds.length === 0) {
-      newErrors.conds = "This field required"
-    }
+    // if (conds.length === 0) {
+    //   newErrors.conds = "This field required"
+    // }
 
-    if (!factGScore || factGScore.trim() === "") {
-      newErrors.factGScore = "This field required";
-    } else {
-      newErrors.factGScore = "";
-    }
+    // if (!factGScore || factGScore.trim() === "") {
+    //   newErrors.factGScore = "This field required";
+    // } else {
+    //   newErrors.factGScore = "";
+    // }
 
 
 
