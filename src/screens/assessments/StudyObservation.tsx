@@ -19,6 +19,7 @@ import { formatDateDDMMYYYY } from 'src/utils/date';
 import { DropdownField } from '@components/DropdownField';
 import FactGForm from '@components/FactGForm';
 import { Modal } from 'react-native';
+import DistressBaselineForm from '@components/DistressBaselineForm';
 
 
 const STATIC_DEVICE_ID = 'DEV-001';
@@ -157,20 +158,24 @@ const StudyObservation = () => {
   const [randomizationId, setRandomizationId] = useState("");
 
   const [showFactGForm, setShowFactGForm] = useState(false);
+  const [showDistressBaselineForm, setShowDistressBaselineForm] = useState(false);
 
-  const handleClick = () => setShowFactGForm(true);
+
+  const openDistressBaselineForm = () => setShowDistressBaselineForm(true);
+  const closeDistressBaselineForm = () => setShowDistressBaselineForm(false);
+
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
- const rawDate = formValues['SOFID-1']?.split('T')[0] || '';
- const formattedDate = formatDateDDMMYYYY(rawDate);
+  const rawDate = formValues['SOFID-1']?.split('T')[0] || '';
+  const formattedDate = formatDateDDMMYYYY(rawDate);
 
- const weekOptions = Array.from({ length: 12 }, (_, i) => ({
-  label: `Week ${i + 1}`,
-  value: (i + 1).toString(),
-}));
+  const weekOptions = Array.from({ length: 12 }, (_, i) => ({
+    label: `Week ${i + 1}`,
+    value: (i + 1).toString(),
+  }));
 
-  
+
 
   // Group fields into categories for form cards
   const groupFields = (fields: FormField[]) => {
@@ -335,7 +340,7 @@ const StudyObservation = () => {
       console.log('Randomization ID API response:', response.data);
       const data = response.data?.ResponseData;
       console.log('Randomization ID data:', data);
-      
+
       if (data && data.GroupTypeNumber) {
         console.log('Setting randomization ID:', data.GroupTypeNumber);
         setRandomizationId(data.GroupTypeNumber);
@@ -347,72 +352,73 @@ const StudyObservation = () => {
     }
   };
 
-const fetchBaselineScores = async (participantId: string, studyId: string) => {
-  setBaselineLoading(true);
-  try {
-    let factGScore = 0;
-    let distressValue = '0';
+  const fetchBaselineScores = async (participantId: string, studyId: string) => {
+    setBaselineLoading(true);
+    try {
+      let factGScore = 0;
+      let distressValue = '0';
 
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
 
-    // Fetch FACT-G data for today only
-    const factGRes = await apiService.post('/getParticipantFactGQuestionWeekly', {
-      StudyId: studyId,
-      ParticipantId: participantId,
-      CreatedDate: today,
-    }) as { data: FactGResponse };
+      // Fetch FACT-G data for today only
+      const factGRes = await apiService.post('/getParticipantFactGQuestionBaseline', {
+        StudyId: studyId,
+        ParticipantId: participantId,
+        CreatedDate: today,
+      }) as { data: FactGResponse };
 
-    if (factGRes.data && factGRes.data.FinalScore) {
-      const parsedScore = Number(factGRes.data.FinalScore);
-      factGScore = isNaN(parsedScore) ? 0 : parsedScore;
-    } else {
-      factGScore = 0;
+      if (factGRes.data && factGRes.data.FinalScore) {
+        const parsedScore = Number(factGRes.data.FinalScore);
+        factGScore = isNaN(parsedScore) ? 0 : parsedScore;
+      } else {
+        factGScore = 0;
+      }
+
+      // Fetch distress score for today only
+      const distressRes = await apiService.post('/GetParticipantDistressWeeklyScore', {
+        ParticipantId: participantId,
+        CreatedDate: todayStr,
+      }) as { data: DistressWeeklyResponse };
+
+      const todayDistress = distressRes.data.ResponseData.find(item => {
+        if (!item.CreatedDate) return false;
+        const itemDateStr = item.CreatedDate.split(' ')[0]; // Adjust if needed
+        return itemDateStr === todayStr;
+      });
+      distressValue = todayDistress?.ScaleValue || '0';
+
+      if (!todayDistress && distressRes.data.ResponseData.length > 0) {
+        distressRes.data.ResponseData.sort((a, b) =>
+          b.CreatedDate.localeCompare(a.CreatedDate)
+        );
+        distressValue = distressRes.data.ResponseData[0].ScaleValue || '0';
+        console.log('Fallback distress value:', distressValue);
+      }
+
+
+      // Update the form and state values
+      setFactGScore(factGScore.toString());
+      setDistressScore(distressValue);
+      setFormValues(prev => ({
+        ...prev,
+        'SOFID-7': factGScore.toString(),
+        'SOFID-8': distressValue,
+      }));
+      // setBaselineDisabled(factGScore > 0); 
+
+    } catch (error) {
+      setFactGScore('0');
+      setDistressScore('0');
+      setFormValues(prev => ({
+        ...prev,
+        'SOFID-7': '0',
+        'SOFID-8': '0',
+      }));
+    } finally {
+      setBaselineLoading(false);
     }
-
-    // Fetch distress score for today only
-    const distressRes = await apiService.post('/GetParticipantDistressWeeklyScore', {
-      ParticipantId: participantId,
-      CreatedDate: todayStr,
-    }) as { data: DistressWeeklyResponse };
-
-     const todayDistress = distressRes.data.ResponseData.find(item => {
-      if (!item.CreatedDate) return false;
-      const itemDateStr = item.CreatedDate.split(' ')[0]; // Adjust if needed
-      return itemDateStr === todayStr;
-    });
-     distressValue = todayDistress?.ScaleValue || '0';
-
-    if (!todayDistress && distressRes.data.ResponseData.length > 0) {
-      distressRes.data.ResponseData.sort((a, b) =>
-        b.CreatedDate.localeCompare(a.CreatedDate)
-      );
-      distressValue = distressRes.data.ResponseData[0].ScaleValue || '0';
-      console.log('Fallback distress value:', distressValue);
-    }
-
-
-    // Update the form and state values
-    setFactGScore(factGScore.toString());
-    setDistressScore(distressValue);
-    setFormValues(prev => ({
-      ...prev,
-      'SOFID-7': factGScore.toString(),
-      'SOFID-8': distressValue,
-    }));
-
-  } catch (error) {
-    setFactGScore('0');
-    setDistressScore('0');
-    setFormValues(prev => ({
-      ...prev,
-      'SOFID-7': '0',
-      'SOFID-8': '0',
-    }));
-  } finally {
-    setBaselineLoading(false);
-  }
-};
+  };
 
 
   useEffect(() => {
@@ -451,19 +457,18 @@ const fetchBaselineScores = async (participantId: string, studyId: string) => {
       setResp('');
       setFormValues(prev => ({ ...prev, 'SOFID-13': '' }));
     }
-      setFieldErrors(prev => {
-        const copy = { ...prev };
-        delete copy['SOFID-13'];
-        return copy;
-      });
+    setFieldErrors(prev => {
+      const copy = { ...prev };
+      delete copy['SOFID-13'];
+      return copy;
+    });
   };
 
   const yesNoButton = (label: string, value: string, selected: string, onSelect: (v: string) => void) => (
     <Pressable
       onPress={() => onSelect(value)}
-      className={`flex-1 flex-row items-center justify-center rounded-full py-3 px-2 ${
-        selected === value ? 'bg-[#4FC264]' : 'bg-[#EBF6D6]'
-      }`}
+      className={`flex-1 flex-row items-center justify-center rounded-full py-3 px-2 ${selected === value ? 'bg-[#4FC264]' : 'bg-[#EBF6D6]'
+        }`}
     >
       <Text className={`text-lg mr-1 ${selected === value ? 'text-white' : 'text-black'}`}>
         {value === 'Yes' ? '✅' : '❌'}
@@ -655,11 +660,11 @@ const fetchBaselineScores = async (participantId: string, studyId: string) => {
       setSaving(false);
     }
   };
-      
+
 
   const handleClear = () => {
-    setYesNoStates({});  
-    setResp('');         
+    setYesNoStates({});
+    setResp('');
     setObservationId(null);
     // setFactGScore(null);
     // setDistressScore(null);
@@ -667,19 +672,19 @@ const fetchBaselineScores = async (participantId: string, studyId: string) => {
 
     setFormValues(prev => ({
       ...prev,
-    
-      'SOFID-1': prev['SOFID-1'], 
-      'SOFID-2': prev['SOFID-2'],  
-      'SOFID-3': prev['SOFID-3'],  
-      'SOFID-4': prev['SOFID-4'], 
-      'SOFID-5': prev['SOFID-5'],  
-      'SOFID-6': prev['SOFID-6'],  
+
+      'SOFID-1': prev['SOFID-1'],
+      'SOFID-2': prev['SOFID-2'],
+      'SOFID-3': prev['SOFID-3'],
+      'SOFID-4': prev['SOFID-4'],
+      'SOFID-5': prev['SOFID-5'],
+      'SOFID-6': prev['SOFID-6'],
 
       'SOFID-7': '',
       'SOFID-8': '',
       'SOFID-9': '',
       'SOFID-10': '',
-      'SOFID-11': '', 
+      'SOFID-11': '',
       'SOFID-12': '',
       'SOFID-13': '',
       'SOFID-13-OTHER': '',
@@ -713,9 +718,9 @@ const fetchBaselineScores = async (participantId: string, studyId: string) => {
     const hasError = !!fieldErrors[sofid];
     return (
       <View key={sofid} className="mt-3">
-        <Text 
+        <Text
           className={`text-sm `}
-          style={{ color: hasError ? '#EF4444' : '#rgb(44 74 67)',fontWeight: '500', marginBottom: 2}}>
+          style={{ color: hasError ? '#EF4444' : '#rgb(44 74 67)', fontWeight: '500', marginBottom: 2 }}>
           {label}
         </Text>
         <Field
@@ -729,33 +734,33 @@ const fetchBaselineScores = async (participantId: string, studyId: string) => {
   };
 
   const renderYesNoField = (sofid: string, label: string) => {
-      const hasError = !!fieldErrors[sofid];
-      return (
+    const hasError = !!fieldErrors[sofid];
+    return (
       <View key={sofid} className="mt-3">
-      <Text className="text-sm mb-2" style={{ color: hasError ? '#EF4444' : '#rgb(44 74 67)', fontWeight: '500' }}>
+        <Text className="text-sm mb-2" style={{ color: hasError ? '#EF4444' : '#rgb(44 74 67)', fontWeight: '500' }}>
           {label}
         </Text>
-        
+
         <View className="flex-row gap-2">
           {yesNoButton('Yes', 'Yes', yesNoStates[sofid] || '', (value) => handleYesNoChange(sofid, value))}
           {yesNoButton('No', 'No', yesNoStates[sofid] || '', (value) => handleYesNoChange(sofid, value))}
-          
+
         </View>
-      
+
       </View>
     );
   };
 
   const renderPatientResponse = () => {
-      const hasError = !!fieldErrors['SOFID-13'];
-      return (
+    const hasError = !!fieldErrors['SOFID-13'];
+    return (
 
       <View className="mt-3" key="patient-response-chips">
-        <Text className="text-sm text-[#4b5f5a] mb-2" 
-        style={{ color: hasError ? '#EF4444' : '#rgb(44 74 67)',fontWeight: '500' }}
+        <Text className="text-sm text-[#4b5f5a] mb-2"
+          style={{ color: hasError ? '#EF4444' : '#rgb(44 74 67)', fontWeight: '500' }}
         >
           Patient Response During Session
-          </Text>
+        </Text>
         <Chip
           items={[...PARTICIPANT_RESPONSES]}
           value={resp}
@@ -772,24 +777,24 @@ const fetchBaselineScores = async (participantId: string, studyId: string) => {
   const groupedFields = groupFields(formFields);
 
   return (
-    
-     <KeyboardAvoidingView
+
+    <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 130 : 0}
     >
-        <View className="px-4" style={{ paddingTop: 8 }}>
-          <View className="bg-white border-b-2 border-gray-300 rounded-xl p-6 flex-row justify-between items-center shadow-sm">
-            <Text className="text-lg font-bold text-green-600">Participant ID: {routePatientId}</Text>
-            <Text className="text-base font-semibold text-green-600">Randomization ID: {randomizationId || "N/A"}</Text>
-            <Text className="text-base font-semibold text-gray-700">Age: {age ?? 'Not specified'}</Text>
-          </View>
+      <View className="px-4" style={{ paddingTop: 8 }}>
+        <View className="bg-white border-b-2 border-gray-300 rounded-xl p-6 flex-row justify-between items-center shadow-sm">
+          <Text className="text-lg font-bold text-green-600">Participant ID: {routePatientId}</Text>
+          <Text className="text-base font-semibold text-green-600">Randomization ID: {randomizationId || "N/A"}</Text>
+          <Text className="text-base font-semibold text-gray-700">Age: {age ?? 'Not specified'}</Text>
         </View>
+      </View>
 
-        <ScrollView className="flex-1 p-4 bg-bg pb-[400px]"  style={{ paddingTop: 5 }}    keyboardShouldPersistTaps="handled">
-         <FormCard icon="S" title="Study Observation - Basic Information">
-        
-           <View className="flex-row flex-wrap gap-x-4 gap-y-3 mt-3">
+      <ScrollView className="flex-1 p-4 bg-bg pb-[400px]" style={{ paddingTop: 5 }} keyboardShouldPersistTaps="handled">
+        <FormCard icon="S" title="Study Observation - Basic Information">
+
+          <View className="flex-row flex-wrap gap-x-4 gap-y-3 mt-3">
             <View style={{ minWidth: '48%' }}>
               <Field
                 label="Participant ID"
@@ -811,14 +816,14 @@ const fetchBaselineScores = async (participantId: string, studyId: string) => {
             {groupedFields.basic
               .filter((f) => f.SOFID !== 'SOFID-1' && f.SOFID !== 'SOFID-2')
               .map((f) => {
-                 if (f.SOFID === 'SOFID-5') {
+                if (f.SOFID === 'SOFID-5') {
                   return (
                     <View key={f.SOFID} className="flex-1" style={{ minWidth: '45%' }}>
                       <DropdownField
                         label="Session Week"
-                        options={weekOptions}  
+                        options={weekOptions}
                         value={formValues['SOFID-5'] || ''}
-                        onValueChange={(val: string) => updateFormValue('SOFID-5', val)} 
+                        onValueChange={(val: string) => updateFormValue('SOFID-5', val)}
                         placeholder="Select week"
                       />
                     </View>
@@ -832,41 +837,54 @@ const fetchBaselineScores = async (participantId: string, studyId: string) => {
                 }
               })}
 
-              
           </View>
 
         </FormCard>
 
 
-          <FormCard icon="B" title="Baseline Assessment & Scores">
-            <View className="flex-row flex-wrap gap-3">
-              <Pressable onPress={() => setShowFactGForm(true)}>
-                <View className="flex-1 mt-3">
-                  <Text className="text-sm text-[#rgb(44 74 67)] mb-1">FACT G Score</Text>
-                  <View className="p-3 bg-gray-100 rounded-lg border border-gray-200">
-                    {baselineLoading ? (
-                      <ActivityIndicator size="small" color="#4FC264" />
-                    ) : (
-                      <Text className="text-base text-gray-800">{(factGScore && factGScore !== '') ? factGScore : '0'}</Text>
-                    )}
-                  </View>
-                </View>
-              </Pressable>
+        <FormCard icon="B" title="Baseline Assessment & Scores">
 
-              <View className="flex-1 mt-3">
-                <Text className="text-sm text-[#rgb(44 74 67)] mb-1">Distress Thermometer Score</Text>
-                <View className="p-3 bg-gray-100 rounded-lg border border-gray-200">
-                  {baselineLoading ? (
-                    <ActivityIndicator size="small" color="#4FC264" />
-                  ) : (
-                    <Text className="text-base text-gray-800">{(distressScore && distressScore !== '') ? distressScore : '0'}</Text>
-                  )}
-                </View>
+          <View className="flex-row gap-3 mb-2">
+            <Pressable className="flex-1 px-4 py-3 bg-[#0ea06c] rounded-lg" onPress={() => setShowFactGForm(true)}>
+              <Text className="text-sm text-white font-medium text-center">
+                Fact-G scoring 0-108
+              </Text>
+            </Pressable>
+            <Pressable className="flex-1 px-4 py-3 bg-[#0ea06c] rounded-lg" onPress={openDistressBaselineForm}>
+              <Text className="text-sm text-white font-medium text-center">
+                Distress Thermometer scoring 0-10
+              </Text>
+            </Pressable>
+
+          </View>
+          <View className="flex-row flex-wrap gap-3">
+            <View className="flex-1 mt-3">
+              <Text className="text-sm text-[#rgb(44 74 67)] mb-1">FACT G Score</Text>
+              <View className="p-3 bg-gray-100 rounded-lg border border-gray-200">
+                {baselineLoading ? (
+                  <ActivityIndicator size="small" color="#4FC264" />
+                ) : (
+                  <Text className="text-base text-gray-800">{(factGScore && factGScore !== '') ? factGScore : '0'}</Text>
+                )}
               </View>
             </View>
-          </FormCard>
 
-         
+            <View className="flex-1 mt-3">
+              <Text className="text-sm text-[#rgb(44 74 67)] mb-1">Distress Thermometer Score</Text>
+              <View className="p-3 bg-gray-100 rounded-lg border border-gray-200">
+                {baselineLoading ? (
+                  <ActivityIndicator size="small" color="#4FC264" />
+                ) : (
+                  <Text className="text-base text-gray-800">{(distressScore && distressScore !== '') ? distressScore : '0'}</Text>
+                )}
+              </View>
+            </View>
+
+
+          </View>
+        </FormCard>
+
+
         <Modal
           visible={showFactGForm}
           animationType="slide"
@@ -874,98 +892,117 @@ const fetchBaselineScores = async (participantId: string, studyId: string) => {
           transparent={true}
         >
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', }}>
-          <ScrollView>
-            <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
-              <Pressable onPress={closeFactGModal}>
-                <Text style={{ color: 'red', marginTop: 20 ,marginRight:20}}>Close</Text>
-              </Pressable>
+            <ScrollView>
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+                <Pressable onPress={closeFactGModal}>
+                  <Text style={{ color: 'red', marginTop: 20, marginRight: 20 }}>Close</Text>
+                </Pressable>
               </View>
               <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 10 }}>
-              <FactGForm onClose={closeFactGModal} />
-            
-            </View>
+                <FactGForm />
+
+              </View>
             </ScrollView>
           </View>
         </Modal>
 
+        <Modal
+          visible={showDistressBaselineForm}
+          animationType="slide"
+          onRequestClose={closeDistressBaselineForm}
+          transparent={true}
+        >
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <ScrollView>
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+                <Pressable onPress={closeDistressBaselineForm}>
+                  <Text style={{ color: 'red', marginTop: 20, marginRight: 20 }}>Close</Text>
+                </Pressable>
+              </View>
+              <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 10 }}>
+                <DistressBaselineForm />
+
+              </View>
+            </ScrollView>
+          </View>
+        </Modal>
+
+        <FormCard icon="S" title="Session Details & Responses">
+          {renderYesNoField('SOFID-9', 'Was the session completed?')}
+          {yesNoStates['SOFID-9'] === 'No' && renderTextField('SOFID-10', 'If No, specify reason')}
+          <View className="flex-row gap-4 mt-3">
+            {['SOFID-11', 'SOFID-12'].map((sofid) => {
+              const field = formFields.find((f) => f.SOFID === sofid);
+              if (!field) return null;
+
+              return (
+                <View key={sofid} className="flex-1">
+                  <Text
+                    className="text-sm"
+                    style={{
+                      color: fieldErrors[sofid] ? '#EF4444' : '#4b5f5a',
+                      marginBottom: 2,
+                    }}
+                  >
+                    {field.FieldLabel}
+                  </Text>
+                  <DateField
+                    value={formValues[sofid] || ''}
+                    onChange={(val) => updateFormValue(sofid, val)}
+                    mode="time"
+                    placeholder="HH:mm:ss"
+                  />
+                </View>
+              );
+            })}
+          </View>
 
 
-          <FormCard icon="S" title="Session Details & Responses">
-            {renderYesNoField('SOFID-9', 'Was the session completed?')}
-            {yesNoStates['SOFID-9'] === 'No' && renderTextField('SOFID-10', 'If No, specify reason')}
-            <View className="flex-row gap-4 mt-3">
-              {['SOFID-11', 'SOFID-12'].map((sofid) => {
-                const field = formFields.find((f) => f.SOFID === sofid);
-                if (!field) return null;
+          {renderPatientResponse()}
+          {renderYesNoField('SOFID-14', 'Any Technical Issues?')}
+          {yesNoStates['SOFID-14'] === 'Yes' && renderTextField('SOFID-15', 'If Yes, describe technical issues', undefined, true)}
+        </FormCard>
 
-                return (
-                  <View key={sofid} className="flex-1">
-                    <Text
-                      className="text-sm"
-                      style={{
-                        color: fieldErrors[sofid] ? '#EF4444' : '#4b5f5a',
-                        marginBottom: 2,
-                      }}
-                    >
-                      {field.FieldLabel}
-                    </Text>
-                    <DateField
-                      value={formValues[sofid] || ''}
-                      onChange={(val) => updateFormValue(sofid, val)}
-                      mode="time"
-                      placeholder="HH:mm:ss"
-                    />
-                  </View>
-                );
-              })}
-            </View>
+        <FormCard icon="C" title="Counselor Compliance">
+          <View className="flex-col gap-4">
+            {['SOFID-16', 'SOFID-17', 'SOFID-18'].map((sofid) => {
+              const field = formFields.find((f) => f.SOFID === sofid);
+              if (!field) return null;
+              return (
+                <View key={sofid}>
+                  {renderYesNoField(sofid, field.FieldLabel)}
+                </View>
+              );
+            })}
+          </View>
+
+          {renderYesNoField('SOFID-20', 'Was the patient able to follow instructions?')}
+          {yesNoStates['SOFID-20'] === 'No' && renderTextField('SOFID-21', 'If No, explain instruction difficulties (optional)', undefined, true)}
+        </FormCard>
 
 
-            {renderPatientResponse()}
-            {renderYesNoField('SOFID-14', 'Any Technical Issues?')}
-            {yesNoStates['SOFID-14'] === 'Yes' && renderTextField('SOFID-15', 'If Yes, describe technical issues', undefined, true)}
-          </FormCard>
+        <FormCard icon="A" title="Additional Observations & Side Effects">
+          {renderYesNoField('SOFID-22', 'Any visible signs of discomfort?')}
+          {yesNoStates['SOFID-22'] === 'Yes' && renderTextField('SOFID-23', 'If Yes, describe discomfort (optional)', undefined, true)}
+          {renderYesNoField('SOFID-24', 'Did the patient require assistance?')}
+          {yesNoStates['SOFID-24'] === 'Yes' && renderTextField('SOFID-25', 'If Yes, explain assistance provided (optional)', undefined, true)}
+          {renderYesNoField('SOFID-26', 'Any deviations from protocol?')}
+          {yesNoStates['SOFID-26'] === 'Yes' && renderTextField('SOFID-27', 'If Yes, explain protocol deviations (optional)', undefined, true)}
+          {renderTextField('SOFID-28', 'Other Observations', undefined, true)}
+          <View style={{ height: 150 }} />
+        </FormCard>
 
-          <FormCard icon="C" title="Counselor Compliance">
-            <View className="flex-col gap-4">
-              {['SOFID-16', 'SOFID-17', 'SOFID-18'].map((sofid) => {
-                const field = formFields.find((f) => f.SOFID === sofid);
-                if (!field) return null;
-                return (
-                  <View key={sofid}>
-                    {renderYesNoField(sofid, field.FieldLabel)}
-                  </View>
-                );
-              })}
-            </View>
+      </ScrollView>
 
-            {renderYesNoField('SOFID-20', 'Was the patient able to follow instructions?')}
-            {yesNoStates['SOFID-20'] === 'No' && renderTextField('SOFID-21', 'If No, explain instruction difficulties (optional)', undefined, true)}
-          </FormCard>
+      <BottomBar>
+        <Btn variant="light" onPress={handleValidate}>Validate</Btn>
+        <Btn variant="light" onPress={handleClear}>Clear</Btn>
+        <Btn onPress={handleSave} disabled={saving || loading}>
+          {saving ? 'Saving...' : 'Save & Close'}
+        </Btn>
+      </BottomBar>
+    </KeyboardAvoidingView>
 
-
-          <FormCard icon="A" title="Additional Observations & Side Effects">
-            {renderYesNoField('SOFID-22', 'Any visible signs of discomfort?')}
-            {yesNoStates['SOFID-22'] === 'Yes' && renderTextField('SOFID-23', 'If Yes, describe discomfort (optional)', undefined, true)}
-            {renderYesNoField('SOFID-24', 'Did the patient require assistance?')}
-            {yesNoStates['SOFID-24'] === 'Yes' && renderTextField('SOFID-25', 'If Yes, explain assistance provided (optional)', undefined, true)}
-            {renderYesNoField('SOFID-26', 'Any deviations from protocol?')}
-            {yesNoStates['SOFID-26'] === 'Yes' && renderTextField('SOFID-27', 'If Yes, explain protocol deviations (optional)', undefined, true)}
-            {renderTextField('SOFID-28', 'Other Observations', undefined, true)}
-            <View style={{ height: 150 }} />
-          </FormCard>
-
-        </ScrollView>
-
-        <BottomBar>
-          <Btn variant="light" onPress={handleValidate}>Validate</Btn>
-          <Btn variant="light" onPress={handleClear}>Clear</Btn>
-          <Btn onPress={handleSave} disabled={saving || loading}>
-            {saving ? 'Saving...' : 'Save & Close'}
-          </Btn>
-        </BottomBar>
-      </KeyboardAvoidingView>
-   
   );
 };
 
