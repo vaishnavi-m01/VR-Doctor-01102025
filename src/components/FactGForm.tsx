@@ -1,11 +1,7 @@
 import React, { useState, useMemo, useEffect, useContext } from "react";
 import { View, Text, ScrollView, Pressable, ActivityIndicator } from "react-native";
-
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import Toast from "react-native-toast-message";
-import { UserContext } from 'src/store/context/UserContext';
-import { KeyboardAvoidingView } from "react-native";
-import { Platform } from "react-native";
 import { Field } from "@components/Field";
 import DateField from "@components/DateField";
 import FormCard from "./FormCard";
@@ -13,6 +9,10 @@ import BottomBar from "./BottomBar";
 import { Btn } from "./Button";
 import { RootStackParamList } from "src/Navigation/types";
 import { apiService } from "src/services";
+import { UserContext } from 'src/store/context/UserContext';
+import { KeyboardAvoidingView } from "react-native";
+import { Platform } from "react-native";
+
 
 interface FactGQuestion {
   FactGCategoryId: string;
