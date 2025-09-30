@@ -898,15 +898,14 @@ const StudyObservation = () => {
                 padding: 20,
                 width: '98%',
                 maxHeight: '80%',
-                // shadowColor: '#000',
-                // shadowOffset: { width: 0, height: 4 },
-                // shadowOpacity: 0.3,
-                // shadowRadius: 6,
                 elevation: 8,
               }}
             >
-              {/* Close button */}
-              <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ fontWeight: '600', fontSize: 16, color: '#000' }}>
+                 Fact G Baseline
+                </Text>
+
                 <Pressable
                   onPress={closeFactGModal}
                   style={{
@@ -928,24 +927,45 @@ const StudyObservation = () => {
           </View>
         </Modal>
 
-        <Modal
+         <Modal
           visible={showDistressBaselineForm}
           animationType="slide"
           onRequestClose={closeDistressBaselineForm}
           transparent={true}
         >
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <ScrollView>
-              <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
-                <Pressable onPress={closeDistressBaselineForm}>
-                  <Text style={{ color: 'red', marginTop: 20, marginRight: 20 }}>Close</Text>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+            <View
+              style={{
+                backgroundColor: 'white',
+                borderRadius: 16,
+                padding: 20,
+                width: '98%',
+                maxHeight: '80%',
+                elevation: 8,
+              }}
+            >
+
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ fontWeight: '600', fontSize: 16, color: '#000' }}>
+                  Distress Thermometer Baseline
+                </Text>
+
+                <Pressable onPress={closeDistressBaselineForm}
+                  style={{
+                    backgroundColor: '#f87171',
+                    borderRadius: 20,
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                  }}
+                >
+                  <Text style={{ color: 'white', fontWeight: '600' }}>Close</Text>
                 </Pressable>
               </View>
-              <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 10 }}>
-                <DistressBaselineForm />
-
-              </View>
+      
+            <ScrollView showsVerticalScrollIndicator={false}> 
+                <DistressBaselineForm />        
             </ScrollView>
+          </View>
           </View>
         </Modal>
 

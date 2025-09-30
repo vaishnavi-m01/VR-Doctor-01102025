@@ -302,7 +302,7 @@ export default function ExitInterview() {
     // if (isEmptyString(studySuggestions)) newErrors.studySuggestions = 'This field is required';
     // if (isEmptyString(vrHelpful)) newErrors.vrHelpful = 'This field is required';
     // if (isEmptyString(vrChallenging)) newErrors.vrChallenging = 'This field is required';
-    if (isEmptyString(interviewerSignature)) newErrors.interviewerSignature = 'Interviewer signature is required';
+    // if (isEmptyString(interviewerSignature)) newErrors.interviewerSignature = 'Interviewer signature is required';
     if (isEmptyString(participantDate)) newErrors.participantDate = 'Participant date is required';
     if (isEmptyString(interviewerDate)) newErrors.interviewerDate = 'Interviewer date is required';
 

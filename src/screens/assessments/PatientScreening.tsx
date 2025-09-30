@@ -85,20 +85,20 @@ export default function PatientScreening() {
   const { patientId, age, studyId } = route.params as { patientId: number; age: number; studyId: number };
   const { userId } = useContext(UserContext);
   const [checked, setChecked] = useState(false);
-  
+
   // Distress Thermometer state
   const [distressSelectedProblems, setDistressSelectedProblems] = useState<{ [key: string]: boolean }>({});
 
-    const [factGScore, setFactGScore] = useState<string | null>(null);
-    const [distressScore, setDistressScore] = useState<string | null>(null);
-    const [baselineLoading, setBaselineLoading] = useState<boolean>(false);
+  const [factGScore, setFactGScore] = useState<string | null>(null);
+  const [distressScore, setDistressScore] = useState<string | null>(null);
+  const [baselineLoading, setBaselineLoading] = useState<boolean>(false);
 
   const [showFactGForm, setShowFactGForm] = useState(false);
   const [showDistressBaselineForm, setShowDistressBaselineForm] = useState(false);
-  
-  
-   const openDistressBaselineForm = () => setShowDistressBaselineForm(true);
-   const closeDistressBaselineForm = () => setShowDistressBaselineForm(false);
+
+
+  const openDistressBaselineForm = () => setShowDistressBaselineForm(true);
+  const closeDistressBaselineForm = () => setShowDistressBaselineForm(false);
 
   const routes = useRoute();
   const { CreatedDate: routeCreatedDate, PatientId: routePatientId } = (routes.params as any) ?? {};
@@ -127,76 +127,72 @@ export default function PatientScreening() {
     }
   }, [routeCreatedDate, routePatientId]);
 
-const fetchBaselineScores = async (patientId: string, studyId: string) => {
-  setBaselineLoading(true);
-  try {
-    let factGScore = 0;
-    let distressValue = '0';
+  const fetchBaselineScores = async (patientId: string, studyId: string) => {
+    setBaselineLoading(true);
+    try {
+      let factGScore = 0;
+      let distressValue = '0';
 
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
 
-    // Fetch FACT-G data for today only
-    const factGRes = await apiService.post('/getParticipantFactGQuestionBaseline', {
-      StudyId: studyId,
-      ParticipantId: patientId,
-      CreatedDate: today,
-    }) as { data: FactGResponse };
+      // Fetch FACT-G data for today only
+      const factGRes = await apiService.post('/getParticipantFactGQuestionBaseline', {
+        StudyId: studyId,
+        ParticipantId: patientId,
+       
+      }) as { data: FactGResponse };
 
-    if (factGRes.data && factGRes.data.FinalScore) {
-      const parsedScore = Number(factGRes.data.FinalScore);
-      factGScore = isNaN(parsedScore) ? 0 : parsedScore;
-    } else {
-      factGScore = 0;
+      if (factGRes.data && factGRes.data.FinalScore) {
+        const parsedScore = Number(factGRes.data.FinalScore);
+        factGScore = isNaN(parsedScore) ? 0 : parsedScore;
+      } else {
+        factGScore = 0;
+      }
+
+      // Fetch distress score for today only
+      const distressRes = await apiService.post('/GetParticipantDistressWeeklyScore', {
+        ParticipantId: patientId,
+        CreatedDate: todayStr,
+      }) as { data: DistressWeeklyResponse };
+
+      const todayDistress = distressRes.data.ResponseData.find(item => {
+        if (!item.CreatedDate) return false;
+        const itemDateStr = item.CreatedDate.split(' ')[0]; // Adjust if needed
+        return itemDateStr === todayStr;
+      });
+      distressValue = todayDistress?.ScaleValue || '0';
+
+      if (!todayDistress && distressRes.data.ResponseData.length > 0) {
+        distressRes.data.ResponseData.sort((a, b) =>
+          b.CreatedDate.localeCompare(a.CreatedDate)
+        );
+        distressValue = distressRes.data.ResponseData[0].ScaleValue || '0';
+        console.log('Fallback distress value:', distressValue);
+      }
+
+
+      // Update the form and state values
+      setFactGScore(factGScore.toString());
+      setDistressScore(distressValue);
+
+
+    } catch (error) {
+      setFactGScore('0');
+      setDistressScore('0');
+
+    } finally {
+      setBaselineLoading(false);
     }
+  };
 
-    // Fetch distress score for today only
-    const distressRes = await apiService.post('/GetParticipantDistressWeeklyScore', {
-      ParticipantId: patientId,
-      CreatedDate: todayStr,
-    }) as { data: DistressWeeklyResponse };
-
-     const todayDistress = distressRes.data.ResponseData.find(item => {
-      if (!item.CreatedDate) return false;
-      const itemDateStr = item.CreatedDate.split(' ')[0]; // Adjust if needed
-      return itemDateStr === todayStr;
-    });
-     distressValue = todayDistress?.ScaleValue || '0';
-
-    if (!todayDistress && distressRes.data.ResponseData.length > 0) {
-      distressRes.data.ResponseData.sort((a, b) =>
-        b.CreatedDate.localeCompare(a.CreatedDate)
-      );
-      distressValue = distressRes.data.ResponseData[0].ScaleValue || '0';
-      console.log('Fallback distress value:', distressValue);
-    }
-
-
-    // Update the form and state values
-    setFactGScore(factGScore.toString());
-    setDistressScore(distressValue);
-    
-
-  } catch (error) {
-    setFactGScore('0');
-    setDistressScore('0');
-   
-  } finally {
-    setBaselineLoading(false);
-  }
-};
-
-useEffect(() => {
-  if (route.params?.patientId) {
-    setParticipantId(route.params.patientId.toString());
-  }
-}, [route.params]);
 
   useEffect(() => {
-  if (patientId && studyId) {
-    fetchBaselineScores(patientId, studyId);
-  }
-}, [patientId, studyId]);
+    if (patientId && studyId) {
+      fetchBaselineScores(patientId.toString(), studyId.toString());
+    }
+  }, [patientId, studyId]);
+
 
   // Toggle distress problem selection
   const toggleDistressProblem = (problemId: string) => {
@@ -411,7 +407,7 @@ useEffect(() => {
     }
   };
 
-  
+
   const closeFactGModal = () => {
     setShowFactGForm(false);
     // Refresh baseline scores after FactG form is closed
@@ -467,12 +463,12 @@ useEffect(() => {
 
         <FormCard icon="I" title="Medical Details">
           <View className="flex-row gap-3 mb-2">
-             <Pressable className="flex-1 px-4 py-3 bg-[#0ea06c] rounded-lg" onPress={() => setShowFactGForm(true)}>
+            <Pressable className="flex-1 px-4 py-3 bg-[#0ea06c] rounded-lg" onPress={() => setShowFactGForm(true)}>
               <Text className="text-sm text-white font-medium text-center">
                 Fact-G scoring 0-108
               </Text>
             </Pressable>
-                        <Pressable className="flex-1 px-4 py-3 bg-[#0ea06c] rounded-lg" onPress={openDistressBaselineForm}>
+            <Pressable className="flex-1 px-4 py-3 bg-[#0ea06c] rounded-lg" onPress={openDistressBaselineForm}>
               <Text className="text-sm text-white font-medium text-center">
                 Distress Thermometer scoring 0-10
               </Text>
@@ -513,41 +509,86 @@ useEffect(() => {
             onRequestClose={closeFactGModal}
             transparent={true}
           >
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', }}>
-            <ScrollView>
-              <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
-                <Pressable onPress={closeFactGModal}>
-                  <Text style={{ color: 'red', marginTop: 20 ,marginRight:20}}>Close</Text>
-                </Pressable>
+            <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+              <View
+                style={{
+                  backgroundColor: 'white',
+                  borderRadius: 16,
+                  padding: 20,
+                  width: '98%',
+                  maxHeight: '80%',
+                  elevation: 8,
+                }}
+              >
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={{ fontWeight: '600', fontSize: 16, color: '#000' }}>
+                    Fact G Baseline
+                  </Text>
+
+                  <Pressable onPress={closeFactGModal}
+                    style={{
+                      backgroundColor: '#f87171',
+                      borderRadius: 20,
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                    }}
+                  >
+                    <Text style={{ color: 'white', fontWeight: '600' }}>Close</Text>
+                  </Pressable>
                 </View>
-                <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 10 }}>
-                <FactGForm />
-              
+
+
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  <FactGForm />
+                </ScrollView>
+
               </View>
-              </ScrollView>
             </View>
           </Modal>
-  
+
           <Modal
-              visible={showDistressBaselineForm}
-              animationType="slide"
-              onRequestClose={closeDistressBaselineForm}
-              transparent={true}
-            >
-              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ScrollView>
-                  <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
-                    <Pressable onPress={closeDistressBaselineForm}>
-                      <Text style={{ color: 'red', marginTop: 20, marginRight: 20 }}>Close</Text>
-                    </Pressable>
-                  </View>
-                  <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 10 }}>
-                    <DistressBaselineForm />
+            visible={showDistressBaselineForm}
+            animationType="slide"
+            onRequestClose={closeDistressBaselineForm}
+            transparent={true}
+          >
+            <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+              <View
+                style={{
+                  backgroundColor: 'white',
+                  borderRadius: 16,
+                  padding: 20,
+                  width: '98%',
+                  maxHeight: '80%',
+                  elevation: 8,
+                }}
+              >
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={{ fontWeight: '600', fontSize: 16, color: '#000' }}>
+                    Distress Thermometer Baseline
+                  </Text>
                   
-                  </View>
+                  <Pressable onPress={closeDistressBaselineForm}
+                   style={{
+                      backgroundColor: '#f87171',
+                      borderRadius: 20,
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                    }}
+                  >
+                    <Text style={{ color: 'white', fontWeight: '600' }}>Close</Text>
+                  </Pressable>
+                </View>
+
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  <DistressBaselineForm />
                 </ScrollView>
               </View>
-            </Modal>
+
+            </View>
+          </Modal>
 
           <Text className="text-lg mt-3 font-semibold">Vitals</Text>
           <View className="flex-row gap-3 mt-3">

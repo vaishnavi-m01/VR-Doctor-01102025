@@ -161,24 +161,24 @@ export default function InformedConsentForm({
         if (!signatures.subjectName || signatures.subjectName.trim() === "") {
             newErrors.subjectName = "Subject name is required";
         }
-        if (!subjectSignaturePad) {
-            newErrors.subjectSignaturePad = "Subject signature is required";
-        }
+        // if (!subjectSignaturePad) {
+        //     newErrors.subjectSignaturePad = "Subject signature is required";
+        // }
         if (!signatures.coPIName || signatures.coPIName.trim() === "") {
             newErrors.coPIName = "Co-PI name is required";
         }
-        if (!coPISignaturePad) {
-            newErrors.coPISignaturePad = "Co-PI signature is required";
-        }
+        // if (!coPISignaturePad) {
+        //     newErrors.coPISignaturePad = "Co-PI signature is required";
+        // }
         if (!signatures.investigatorName || signatures.investigatorName.trim() === "") {
             newErrors.investigatorName = "Investigator name is required";
         }
         if (!signatures.witnessName || signatures.witnessName.trim() === "") {
             newErrors.witnessName = "Witness name is required";
         }
-        if (!witnessSignaturePad) {
-            newErrors.witnessSignaturePad = "Witness signature is required";
-        }
+        // if (!witnessSignaturePad) {
+        //     newErrors.witnessSignaturePad = "Witness signature is required";
+        // }
 
         setErrors(newErrors);
 

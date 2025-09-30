@@ -139,7 +139,7 @@ export default function DistressBaselineForm() {
 
       try {
         const scoreRes = await apiService.post<{ ResponseData: any[] }>(
-          "/GetParticipantDistressBaselineScore",
+          "/GetParticipantDistressWeeklyScore",
           {
             ParticipantId: participantId,
             StudyId: studyIdFormatted,

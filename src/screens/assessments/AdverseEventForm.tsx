@@ -416,9 +416,9 @@ export default function AdverseEventForm() {
             newErrors.followUpParticipantStatus = "Follow-up Participant Status is required";
         }
 
-        if (!investigatorSignature?.trim()) {
-            newErrors.investigatorSignature = "Investigator Signature is required";
-        }
+        // if (!investigatorSignature?.trim()) {
+        //     newErrors.investigatorSignature = "Investigator Signature is required";
+        // }
 
         if (!severity) {
             newErrors.severity = "Severity is required";

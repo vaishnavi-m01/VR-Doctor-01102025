@@ -145,19 +145,21 @@ export default function FactGForm() {
     });
   };
 
-const fetchFactG = async () => {
+ 
+
+  const fetchFactG = async () => {
   try {
     setLoading(true);
     setError(null);
     setSubscales([]);
     setAnswers({});
 
-    // Pass empty strings explicitly for ParticipantId and StudyId to load unfiltered questions
+    const participantId = `${patientId}`;
+    const studyIdFormatted = studyId ? `${studyId}` : "CS-0001";
+
     const payload: any = {
-      // ParticipantId: "",
-      // StudyId: "",
-        ParticipantId: patientId ,
-      StudyId: studyId ,
+      StudyId: studyIdFormatted,
+      ParticipantId: participantId,
     };
 
     const response = await apiService.post<FactGResponse>(
@@ -189,7 +191,9 @@ const fetchFactG = async () => {
       }
 
       // Avoid duplicates
-      const alreadyExists = grouped[catName].items.some((item) => item.code === q.FactGQuestionId);
+      const alreadyExists = grouped[catName].items.some(
+        (item) => item.code === q.FactGQuestionId
+      );
       if (!alreadyExists) {
         grouped[catName].items.push({
           code: q.FactGQuestionId,
@@ -208,23 +212,32 @@ const fetchFactG = async () => {
       "Functional well-being",
     ];
 
-    const orderedSubscales = categoryOrder.filter((cat) => grouped[cat]).map((cat) => {
-      grouped[cat].items.sort((a, b) => a.code.localeCompare(b.code));
-      return grouped[cat];
-    });
+    const orderedSubscales = categoryOrder
+      .filter((cat) => grouped[cat])
+      .map((cat) => {
+        grouped[cat].items.sort((a, b) => a.code.localeCompare(b.code));
+        return grouped[cat];
+      });
 
     setSubscales(orderedSubscales);
 
-    // Map existing answers, parse scale values to numbers or null for no selection
     const existingAnswers: Record<string, number | null> = {};
     questions.forEach((q) => {
-      const val = q.ScaleValue !== null && q.ScaleValue !== undefined && q.ScaleValue !== 'x'
-        ? parseInt(q.ScaleValue, 10)
-        : null;
-      existingAnswers[q.FactGQuestionId] = isNaN(val) ? null : val;
+      let val: number | null = null;
+      if (
+        q.ScaleValue !== null &&
+        q.ScaleValue !== undefined &&
+        q.ScaleValue !== "x"
+      ) {
+        val = parseInt(q.ScaleValue, 10);
+        if (isNaN(val)) val = null;
+      }
+      existingAnswers[q.FactGQuestionId] = val;
+      console.log(
+        `QuestionId: ${q.FactGQuestionId}, ScaleValue: ${q.ScaleValue}, Parsed: ${val}`
+      );
     });
     setAnswers(existingAnswers);
-
   } catch (err) {
     console.error("Failed to fetch FACT-G questions:", err);
     setError("Failed to load FACT-G questions. Please try again.");
@@ -242,7 +255,6 @@ const fetchFactG = async () => {
 
 
   useEffect(() => {
-    // Fetch questions on mount or when patientId or studyId change
     fetchFactG();
   }, [patientId, studyId]);
 
@@ -332,6 +344,14 @@ const fetchFactG = async () => {
     } finally {
       setSaving(false);
     }
+  };
+
+    const handleClear = () => {
+    setAnswers({});
+    setSelectedDate("");
+    setSubscales([]);
+    setError(null);
+    setFieldErrors({});
   };
 
   const RatingButtons = ({
@@ -539,8 +559,8 @@ const fetchFactG = async () => {
         <Btn variant="light" onPress={handleValidate}>
           Validate
         </Btn>
-        <Btn variant="light" onPress={() => fetchFactG()}>
-          Reload
+        <Btn variant="light" onPress={handleClear}>
+          Clear
         </Btn>
         <Btn onPress={handleSave} disabled={saving}>
           {saving ? "Saving..." : "Save & Close"}
