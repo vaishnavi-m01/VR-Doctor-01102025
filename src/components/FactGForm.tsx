@@ -1,9 +1,7 @@
 import React, { useState, useMemo, useEffect, useContext } from "react";
 import { View, Text, ScrollView, Pressable, ActivityIndicator } from "react-native";
 
-
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
-
 import Toast from "react-native-toast-message";
 import { UserContext } from 'src/store/context/UserContext';
 import { KeyboardAvoidingView } from "react-native";
@@ -158,11 +156,7 @@ const computeScores = (answers: Record<string, number | null>, subscales: Subsca
 };
 
 
-interface FactGFormProps {
-  onClose?: () => void;
-}
-
-export default function FactGForm({ onClose }: FactGFormProps = {}) {
+export default function FactGForm() {
   const [answers, setAnswers] = useState<Record<string, number | null>>({});
   const [subscales, setSubscales] = useState<Subscale[]>([]);
   const [loading, setLoading] = useState(false);
@@ -373,19 +367,14 @@ export default function FactGForm({ onClose }: FactGFormProps = {}) {
 
 
      const existingAnswers: Record<string, number | null> = {};
-questions.forEach((q) => {
-  if (q.FactGQuestionId) {
-    if (!dateToUse) {
-      existingAnswers[q.FactGQuestionId] = null;  // For new form
-    } else {
-      const val = q.ScaleValue !== null && q.ScaleValue !== undefined
-        ? parseInt(q.ScaleValue, 10)
-        : null;
-      existingAnswers[q.FactGQuestionId] = isNaN(val) ? null : val;
-    }
-  }
+questions.forEach(q => {
+  // If no ScaleValue or it's "x", set to null (no selection)
+  const val = (q.ScaleValue !== null && q.ScaleValue !== undefined && q.ScaleValue !== 'x')
+    ? parseInt(q.ScaleValue, 10)
+    : null;
+  existingAnswers[q.FactGQuestionId] = isNaN(val) ? null : val;
 });
-setAnswers(existingAnswers);
+setAnswers(existingAnswers); // Now, all are null unless a real value is set
 
     } catch (err: any) {
       console.error("Failed to fetch FACT-G questions:", err);
@@ -475,121 +464,229 @@ setAnswers(existingAnswers);
   };
 
 
-  const handleSave = async () => {
-    // const totalQuestions = subscales.reduce((acc, scale) => acc + scale.items.length, 0);
-    const answeredQuestions = Object.entries(answers).filter(([_, v]) => v !== null && v !== undefined).length;
+  // const handleSave = async () => {
+  //   // const totalQuestions = subscales.reduce((acc, scale) => acc + scale.items.length, 0);
+  //   const answeredQuestions = Object.entries(answers).filter(([_, v]) => v !== null && v !== undefined).length;
 
 
-    if (answeredQuestions === 0) {
-      Toast.show({
-        type: 'error',
-        text1: 'Validation Error',
-        text2: 'No responses entered. Please fill at least one question before saving.',
-        position: 'top',
-        topOffset: 50,
-      });
+  //   if (answeredQuestions === 0) {
+  //     Toast.show({
+  //       type: 'error',
+  //       text1: 'Validation Error',
+  //       text2: 'No responses entered. Please fill at least one question before saving.',
+  //       position: 'top',
+  //       topOffset: 50,
+  //     });
 
-      setFieldErrors(() => {
-        const errors: Record<string, boolean> = {};
-        subscales.forEach(scale => {
-          scale.items.forEach(item => {
-            errors[item.code] = true;
-          });
-        });
-        return errors;
-      });
-      return;
-    }
+  //     setFieldErrors(() => {
+  //       const errors: Record<string, boolean> = {};
+  //       subscales.forEach(scale => {
+  //         scale.items.forEach(item => {
+  //           errors[item.code] = true;
+  //         });
+  //       });
+  //       return errors;
+  //     });
+  //     return;
+  //   }
 
    
-    setFieldErrors({});
+  //   setFieldErrors({});
 
-    setSaving(true);
-    try {
+  //   setSaving(true);
+  //   try {
 
-      const factGData = Object.entries(answers).map(([code, val]) => {
-        const found = subscales.flatMap((s) => s.items).find((i) => i.code === code);
-        return {
-          FactGCategoryId: found?.FactGCategoryId || "FGC_0001",
-          FactGQuestionId: code,
-          ScaleValue: val !== null ? String(val) : "x",
-          FlagStatus: "Yes",
-          WeekNo: 1,
-        };
-      });
+  //     const factGData = Object.entries(answers).map(([code, val]) => {
+  //       const found = subscales.flatMap((s) => s.items).find((i) => i.code === code);
+  //       return {
+  //         FactGCategoryId: found?.FactGCategoryId || "FGC_0001",
+  //         FactGQuestionId: code,
+  //         ScaleValue: val !== null ? String(val) : "x",
+  //         FlagStatus: "Yes",
+  //         WeekNo: 1,
+  //       };
+  //     });
 
-      let createdDate: string | null;
-      if (selectedDate) {
-        createdDate =
-          selectedDate.includes("-") && selectedDate.split("-")[0].length === 2
-            ? convertDateForAPI(selectedDate)
-            : selectedDate;
-      } else {
-        createdDate = formatTodayDateForAPI();
-      }
+  //     let createdDate: string | null;
+  //     if (selectedDate) {
+  //       createdDate =
+  //         selectedDate.includes("-") && selectedDate.split("-")[0].length === 2
+  //           ? convertDateForAPI(selectedDate)
+  //           : selectedDate;
+  //     } else {
+  //       createdDate = formatTodayDateForAPI();
+  //     }
 
-      const payload = {
-        StudyId: studyId ?? "CS-0001",
-        ParticipantId: String(patientId),
-        SessionNo: "SessionNo-1",
-        FactGData: factGData,
-        CreatedBy: userId ?? "UID-1",
-        CreatedDate: createdDate,
-      };
+  //     const payload = {
+  //       StudyId: studyId ?? "CS-0001",
+  //       ParticipantId: String(patientId),
+  //       SessionNo: "SessionNo-1",
+  //       FactGData: factGData,
+  //       CreatedBy: userId ?? "UID-1",
+  //       CreatedDate: createdDate,
+  //     };
 
-      const isAdd = !selectedDate || !availableDates.includes(selectedDate);
+  //     const isAdd = !selectedDate || !availableDates.includes(selectedDate);
 
-      //  Save data
-      const response = await apiService.post("/AddParticipantFactGQuestionsBaseline", payload);
+  //     //  Save data
+  //     const response = await apiService.post("/AddParticipantFactGQuestionsBaseline", payload);
 
-      if (response.status === 200 || response.status === 201) {
+  //     if (response.status === 200 || response.status === 201) {
 
-        Toast.show({
-          type: "success",
-          text1: isAdd ? 'Added Successfully' : 'Updated Successfully',
-          text2: isAdd ? "FactG Added successfully!" : "FactG Updated successfully!",
-          position: 'top',
-          topOffset: 50,
-          visibilityTime: 1000,
-          onHide: () => {
-            // Call onClose callback if provided, otherwise navigate back
-            if (onClose) {
-              onClose();
-            } else {
-              navigation.goBack();
-              const navState = navigation.getState();
+  //       Toast.show({
+  //         type: "success",
+  //         text1: isAdd ? 'Added Successfully' : 'Updated Successfully',
+  //         text2: isAdd ? "FactG Added successfully!" : "FactG Updated successfully!",
+  //         position: 'top',
+  //         topOffset: 50,
+  //         visibilityTime: 1000,
 
-              // Check if navState exists before using it
-              if (navState && navState.routes) {
-                navigation.reset({
-                  index: 0,
-                  routes: navState.routes.map((r) =>
-                    r.name === "PatientScreening"
-                      ? { ...r, params: { ...(r.params ?? {}), CreatedDate: createdDate, PatientId: patientId } }
-                      : r
-                  ) as any,
-                });
-              }
-            }
-          },
+  //         props.onSubmit(score.TOTAL.toString());
 
+  //         onHide: () => {
+  //           navigation.goBack();
+  //           const navState = navigation.getState();
+
+  //           // Check if navState exists before using it
+  //           if (navState && navState.routes) {
+  //             navigation.reset({
+  //               index: 0,
+  //               routes: navState.routes.map((r) =>
+  //                 r.name === "PatientScreening"
+  //                   ? { ...r, params: { ...(r.params ?? {}), CreatedDate: createdDate, PatientId: patientId } }
+  //                   : r
+  //               ) as any,
+  //             });
+  //           }
+  //         },
+
+  //       });
+
+  //       await fetchAvailableDates();
+  //     } else {
+  //       throw new Error(`Server returned status ${response.status}`);
+  //     }
+  //   } catch (error: any) {
+  //     console.error("Save error:", error);
+  //     Toast.show({
+  //       type: "error",
+  //       text1: "Error saving FACT-G",
+  //       text2: error.message || "Failed to save FACT-G responses.",
+  //     });
+  //   } finally {
+  //     setSaving(false);
+  //   }
+  // };
+
+const handleSave = async () => {
+  const answeredQuestions = Object.entries(answers).filter(([_, v]) => v !== null && v !== undefined).length;
+
+  if (answeredQuestions === 0) {
+    Toast.show({
+      type: 'error',
+      text1: 'Validation Error',
+      text2: 'No responses entered. Please fill at least one question before saving.',
+      position: 'top',
+      topOffset: 50,
+    });
+
+    setFieldErrors(() => {
+      const errors: Record<string, boolean> = {};
+      subscales.forEach(scale => {
+        scale.items.forEach(item => {
+          errors[item.code] = true;
         });
-
-        await fetchAvailableDates();
-      } else {
-        throw new Error(`Server returned status ${response.status}`);
-      }
-    } catch (error: any) {
-      console.error("Save error:", error);
-      Toast.show({
-        type: "error",
-        text1: "Error saving FACT-G",
-        text2: error.message || "Failed to save FACT-G responses.",
       });
-    } finally {
-      setSaving(false);
+      return errors;
+    });
+    return;
+  }
+
+  setFieldErrors({});
+  setSaving(true);
+
+  try {
+    const factGData = Object.entries(answers).map(([code, val]) => {
+      const found = subscales.flatMap((s) => s.items).find((i) => i.code === code);
+      return {
+        FactGCategoryId: found?.FactGCategoryId || "FGC_0001",
+        FactGQuestionId: code,
+        ScaleValue: val !== null ? String(val) : "x",
+        FlagStatus: "Yes",
+        WeekNo: 1,
+      };
+    });
+
+    let createdDate: string | null;
+    if (selectedDate) {
+      createdDate =
+        selectedDate.includes("-") && selectedDate.split("-")[0].length === 2
+          ? convertDateForAPI(selectedDate)
+          : selectedDate;
+    } else {
+      createdDate = formatTodayDateForAPI();
     }
-  };
+
+    const payload = {
+      StudyId: studyId ?? "CS-0001",
+      ParticipantId: String(patientId),
+      SessionNo: "SessionNo-1",
+      FactGData: factGData,
+      CreatedBy: userId ?? "UID-1",
+      CreatedDate: createdDate,
+    };
+
+    const isAdd = !selectedDate || !availableDates.includes(selectedDate);
+
+    // Save data
+    const response = await apiService.post("/AddParticipantFactGQuestionsBaseline", payload);
+
+    if (response.status === 200 || response.status === 201) {
+      Toast.show({
+        type: "success",
+        text1: isAdd ? 'Added Successfully' : 'Updated Successfully',
+        text2: isAdd ? "FactG Added successfully!" : "FactG Updated successfully!",
+        position: 'top',
+        topOffset: 50,
+        visibilityTime: 1000,
+      });
+
+      // Assuming score.TOTAL exists and holds the final FACT-G score
+      if (props.onSubmit) {
+        props.onSubmit(score.TOTAL.toString());
+      }
+
+      await fetchAvailableDates();
+
+      navigation.goBack();
+      const navState = navigation.getState();
+      if (navState && navState.routes) {
+        navigation.reset({
+          index: 0,
+          routes: navState.routes.map((r) =>
+            r.name === "PatientScreening"
+              ? { ...r, params: { ...(r.params ?? {}), CreatedDate: createdDate, PatientId: patientId } }
+              : r
+          ) as any,
+        });
+      }
+    } else {
+      throw new Error(`Server returned status ${response.status}`);
+    }
+  } catch (error: any) {
+    console.error("Save error:", error);
+    Toast.show({
+      type: "error",
+      text1: "Error saving FACT-G",
+      text2: error.message || "Failed to save FACT-G responses.",
+      position: 'top',
+      topOffset: 50,
+    });
+  } finally {
+    setSaving(false);
+  }
+};
+
 
   const RatingButtons = ({
     questionCode,
@@ -604,7 +701,8 @@ setAnswers(existingAnswers);
       >
         <View style={{ flexDirection: "row" }}>
           {[0, 1, 2, 3, 4].map((value) => {
-            const isSelected = currentValue === value;
+            const isSelected = currentValue !== null && currentValue === value;
+
             return (
               <React.Fragment key={value}>
                 <Pressable
