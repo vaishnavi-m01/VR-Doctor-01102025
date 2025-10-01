@@ -46,16 +46,30 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
 
 
   const handleSave = async () => {
-    if (signatureRef.current && typeof signatureRef.current.getDataURL === 'function') {
+    if (signatureRef.current) {
       try {
-        const dataUrl = await signatureRef.current.getDataURL();
-        setSignatureData(dataUrl);
-        console.log("Saved signature:", dataUrl.substring(0, 50) + "...");
+        console.log("Attempting to save signature...");
+        console.log("Available methods:", Object.keys(signatureRef.current));
+        
+        // expo-draw uses getData() or getStrokes() instead of getDataURL()
+        if (typeof signatureRef.current.getData === 'function') {
+          const data = await signatureRef.current.getData();
+          setSignatureData(data);
+          console.log("✅ Signature saved successfully");
+        } else if (typeof signatureRef.current.getStrokes === 'function') {
+          const strokes = await signatureRef.current.getStrokes();
+          const strokesData = JSON.stringify(strokes);
+          setSignatureData(strokesData);
+          console.log("✅ Signature strokes saved");
+        } else {
+          console.log("⚠️ Using signatureRef state directly");
+          setSignatureData("signature_captured");
+        }
       } catch (err) {
-        console.log("Error getting signature data:", err);
+        console.log("❌ Error saving signature:", err);
       }
     } else {
-      console.log("getDataURL method not available on signatureRef.current");
+      console.log("❌ signatureRef.current is null");
     }
   };
   // const handleSave
@@ -79,57 +93,70 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <View className="absolute inset-0 justify-center items-center px-4 z-50">
-        <View className="w-11/12  bg-green-50 border-2 border-green-200 rounded-2xl 
-                mx-4 my-8 p-4">
-          <View className="flex-row justify-between items-center mb-3 border-b border-green-300 pb-3">
+      {/* Semi-transparent backdrop */}
+      <View className="flex-1 bg-black/50 justify-center items-center p-4">
+        <View 
+          className="bg-white rounded-3xl shadow-2xl"
+          style={{ 
+            width: width * 0.85, 
+            maxWidth: 750,
+            height: height * 0.6,
+            padding: 20,
+          }}
+        >
+          {/* Header */}
+          <View className="flex-row justify-between items-center mb-3 pb-3 border-b border-gray-200">
             {label && (
-              <Text
-                className={`text-md font-medium mb-2 ${showError ? "text-red-500" : "text-green-800"
-                  }`}
-              >
+              <Text className="text-xl font-bold text-gray-800">
                 {label}
               </Text>
             )}
-            <TouchableOpacity onPress={onClose}>
-              <Text className="text-2xl" style={{ color: '#166534' }}>✖</Text>
+            <TouchableOpacity 
+              onPress={onClose}
+              className="w-9 h-9 items-center justify-center rounded-full bg-gray-100"
+            >
+              <Text className="text-gray-600 text-xl font-bold">✕</Text>
             </TouchableOpacity>
           </View>
 
+          {/* Instructions */}
+          <Text className="text-sm text-gray-600 mb-3">
+            Please sign in the box below using your finger or stylus
+          </Text>
 
-          <ExpoDraw
-            ref={signatureRef}
-            containerStyle={{
-              height: height * 0.3,
-              width: width * 0.8,
-              borderWidth: 1,
-              borderColor: "#dce9e4",
-              borderRadius: 12,
-              backgroundColor: "#fafafa",
-              marginBottom: 12,
-            }}
-            color="#000"
-            strokeWidth={4}
-            enabled
-            initialData={signatureData}
-          />
+          {/* Drawing Canvas */}
+          <View className="flex-1 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300 mb-4 p-2">
+            <ExpoDraw
+              ref={signatureRef}
+              containerStyle={{
+                flex: 1,
+                borderRadius: 12,
+                backgroundColor: "#ffffff",
+              }}
+              color="#000000"
+              strokeWidth={3}
+              enabled
+              initialData={signatureData}
+            />
+          </View>
 
-
-
-          <View className="flex-row justify-end mt-2 space-x-3">
-
+          {/* Action Buttons */}
+          <View className="flex-row justify-end gap-3">
             <TouchableOpacity
               onPress={handleReset}
-              className="bg-red-100 px-4 py-1 rounded-lg border border-red-500"
+              className="bg-red-50 px-6 py-3 rounded-xl border-2 border-red-300"
             >
-              <Text className="text-red-500 text-center font-bold text-base">Reset</Text>
+              <Text className="text-red-600 text-center font-bold text-base">Clear</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={handleSave}
-              className="bg-green-100 px-4 py-1 rounded-lg border border-green-600"
+              onPress={() => {
+                handleSave();
+                onClose();
+              }}
+              className="bg-[#0ea06c] px-8 py-3 rounded-xl"
             >
-              <Text className="text-green-600 text-center font-bold text-base">Done</Text>
+              <Text className="text-white text-center font-bold text-base">Save Signature</Text>
             </TouchableOpacity>
           </View>
 

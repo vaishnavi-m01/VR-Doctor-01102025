@@ -51,27 +51,36 @@ export default function DateField({
 
   return (
     <View className="flex-1">
-      <Pressable onPress={() => setOpen(true)} className="relative">
-        <Field
-          label={label}
-          value={formatDisplayValue(value)}
-          placeholder={placeholder}
-          editable={false}
-        />
+      <View className="relative">
+        <Pressable 
+          onPress={() => setOpen(true)}
+          style={{ width: '100%' }}
+        >
+          <Field
+            label={label}
+            value={formatDisplayValue(value)}
+            placeholder={placeholder}
+            editable={false}
+            pointerEvents="none"
+          />
+        </Pressable>
         {/* right icon */}
-        <Ionicons
-          name={mode === "time" ? "time-outline" : "calendar-outline"}
-          size={20}
-          color="#4b5f5a"
-          // className="absolute right-3 top-[26px]"
+        <Pressable 
+          onPress={() => setOpen(true)}
           style={{
             position: 'absolute',
             right: 12,
             top: mode === "time" ? '45%' : '58%',
-            transform: [{ translateY: -10 }], 
+            transform: [{ translateY: -10 }],
           }}
-        />
-      </Pressable>
+        >
+          <Ionicons
+            name={mode === "time" ? "time-outline" : "calendar-outline"}
+            size={20}
+            color="#4b5f5a"
+          />
+        </Pressable>
+      </View>
 
       <DateTimePickerModal
         isVisible={open}

@@ -69,17 +69,17 @@ export default function ParticipantInfo({ patientId = 1, age = 0, studyId = 1 }:
           value={text}
           onChangeText={setText}
           numberOfLines={5}
-          style={{ maxHeight: 120 }}
+          style={{ minHeight: 100, maxHeight: 150 }}
         />
 
-        {/* Save Button on the right */}
+        {/* Update Button on the right */}
         <View className="flex-row items-end justify-end">
           <TouchableOpacity
             onPress={handleSave}
-            className="bg-green-100 px-4 py-1 rounded-lg border border-green-600 mt-4"
-            style={{ width: 80 }}
+            className="bg-green-100 px-6 py-2.5 rounded-lg border border-green-600 mt-4"
+            style={{ width: 100 }}
           >
-            <Text className="text-green-600 text-center font-bold text-base">Save</Text>
+            <Text className="text-green-600 text-center font-bold text-base">Update</Text>
           </TouchableOpacity>
         </View>
 

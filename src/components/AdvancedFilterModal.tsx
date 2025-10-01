@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,8 +9,11 @@ import {
   Modal,
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { DropdownField } from './DropdownField';
+import { apiService } from 'src/services';
 
 const GROUP_TYPES = ['Study', 'Controlled'];
+const CANCER_STAGES = ['I', 'II', 'III', 'IV'];
 
 interface AdvancedFilters {
   criteriaStatus: string;
@@ -78,6 +81,35 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({
   onFiltersReset,
 }) => {
 
+  const [cancerTypes, setCancerTypes] = useState<Array<{ label: string; value: string }>>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch cancer types from API
+  useEffect(() => {
+    const fetchCancerTypes = async () => {
+      try {
+        setLoading(true);
+        const response = await apiService.post<any>('/GetCancerTypesData');
+        
+        if (response.data?.ResponseData) {
+          const types = response.data.ResponseData.map((item: any) => ({
+            label: item.CancerType,
+            value: item.CancerTypeId,
+          }));
+          setCancerTypes(types);
+          console.log('Loaded cancer types:', types);
+        }
+      } catch (error) {
+        console.error('Failed to fetch cancer types:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (visible) {
+      fetchCancerTypes();
+    }
+  }, [visible]);
 
   const handleCloseAndClear = async () => {
     await onClearFilters();  
@@ -227,29 +259,31 @@ const handleResetAndClose = () => {
               ) : null}
           </View>
 
-          {/* Cancer Diagnosis */}
+          {/* Cancer Diagnosis Dropdown */}
           <View className="mb-6">
             <Text className="text-gray-700 font-semibold text-base mb-3">Cancer Diagnosis</Text>
-            <TextInput
-              placeholder="e.g. Ovarian"
-              className="bg-white border border-gray-300 rounded-xl py-3 px-4 text-gray-700 text-base"
+            <DropdownField
+              options={[
+                { label: 'None', value: '' },
+                ...cancerTypes
+              ]}
               value={filters.cancerDiagnosis}
-              onChangeText={onCancerDiagnosisChange}
-              returnKeyType="done"
-              placeholderTextColor="#999"
+              onValueChange={onCancerDiagnosisChange}
+              placeholder="Select cancer type"
             />
           </View>
 
-          {/* Stage Of Cancer */}
+          {/* Stage Of Cancer Dropdown */}
           <View className="mb-6">
             <Text className="text-gray-700 font-semibold text-base mb-3">Stage Of Cancer</Text>
-            <TextInput
-              placeholder="e.g. III"
-              className="bg-white border border-gray-300 rounded-xl py-3 px-4 text-gray-700 text-base"
+            <DropdownField
+              options={[
+                { label: 'None', value: '' },
+                ...CANCER_STAGES.map(stage => ({ label: `Stage ${stage}`, value: stage }))
+              ]}
               value={filters.stageOfCancer}
-              onChangeText={onStageOfCancerChange}
-              returnKeyType="done"
-              placeholderTextColor="#999"
+              onValueChange={onStageOfCancerChange}
+              placeholder="Select stage"
             />
           </View>
 

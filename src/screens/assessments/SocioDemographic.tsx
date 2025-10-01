@@ -1214,22 +1214,22 @@ export default function SocioDemographic() {
 
             {/* Participant Signature */}
             <View className="mt-6">
-              {/* <Field
-                label="1. Participant Signature"
-                placeholder="Enter your name"
-                value={participantSignature}
-                error={errors.participantSignature}
-                onChangeText={setParticipantSignature}
-              /> */}
-              <TouchableOpacity onPress={() => setModalVisible(true)}>
-                <Field
-                  label="1. Participant Signature"
-                  placeholder="Click to add signature"
-                  value={participantSignature}
-                  editable={false}
-                  error={errors.participantSignature}
-                />
-              </TouchableOpacity>
+              <Pressable 
+                onPress={() => {
+                  console.log('Signature field clicked, opening modal');
+                  setModalVisible(true);
+                }}
+              >
+                <View pointerEvents="none">
+                  <Field
+                    label="1. Participant Signature"
+                    placeholder="Click to add signature"
+                    value={participantSignature ? "✓ Signature added" : ""}
+                    editable={false}
+                    error={errors.participantSignature}
+                  />
+                </View>
+              </Pressable>
 
               {/* Signature modal */}
               <SignatureModal

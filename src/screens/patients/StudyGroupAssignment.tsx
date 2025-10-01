@@ -7,7 +7,8 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { useRoute, RouteProp } from '@react-navigation/native';
+import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../Navigation/types';
 import { apiService } from 'src/services';
 import { getParticipantBackgroundColor } from '../../utils/participantColors';
@@ -48,9 +49,7 @@ type StudyGroupAssignmentRouteProp = RouteProp<
 type AssignDecision = { id: string; group: 'Controlled' | 'Study' };
 
 export default function StudyGroupAssignment() {
-  // const navigation = useNavigation<
-  //   NativeStackNavigationProp<RootStackParamList, 'StudyGroupAssignment'>
-  // >();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const route = useRoute<StudyGroupAssignmentRouteProp>();
   const { studyId } = route.params;
@@ -73,11 +72,6 @@ export default function StudyGroupAssignment() {
         const requestBody: any = {
           StudyId: studyId,
           CriteriaStatus: 'Included',
-          GroupType: null,
-          SearchString: null,
-          Gender: null,
-          AgeFrom: null,
-          AgeTo: null,
         };
 
         const trimmedSearch = search.trim();
@@ -85,8 +79,6 @@ export default function StudyGroupAssignment() {
 
         // Add basic filtering only if searching, else return all participants for the studyId
         if (trimmedSearch !== '') {
-
-
           if (['male', 'female', 'other'].includes(lowerSearch)) {
             requestBody.Gender =
               lowerSearch.charAt(0).toUpperCase() + lowerSearch.slice(1);
@@ -101,6 +93,14 @@ export default function StudyGroupAssignment() {
             requestBody.CancerDiagnosis = trimmedSearch;
           }
         }
+
+        // Remove null/undefined values from request body
+        Object.keys(requestBody).forEach(key => {
+          const val = requestBody[key];
+          if (val === null || val === undefined || (typeof val === 'string' && val.trim() === '')) {
+            delete requestBody[key];
+          }
+        });
 
         const response = await apiService.post<any>(
           '/GetParticipantsPaginationFilterSearch',
@@ -121,16 +121,22 @@ export default function StudyGroupAssignment() {
               cancerType: item.CancerDiagnosis || 'N/A',
               stage: item.StageOfCancer || 'N/A',
               GroupType:
-                item.GroupType === 'Controlled' || item.GroupType === 'Controlled'
+                item.GroupType === 'Controlled'
                   ? 'Controlled'
                   : item.GroupType === 'Study'
                     ? 'Study'
                     : null,
-              GroupTypeNumber:item.GroupTypeNumber || 'N/A',
-
+              GroupTypeNumber: item.GroupTypeNumber || null,
               CriteriaStatus: item.CriteriaStatus,
             })
           );
+          
+          console.log('Parsed participants with groups:', parsed.map(p => ({
+            id: p.ParticipantId,
+            GroupType: p.GroupType,
+            GroupTypeNumber: p.GroupTypeNumber
+          })));
+          
           setParticipants(parsed);
           return parsed;
         } else {
@@ -152,19 +158,28 @@ export default function StudyGroupAssignment() {
     fetchParticipants(query);
   }, [fetchParticipants, query]);
 
-  // Filter participants by group type accurately
+  // Filter participants by group type accurately - only show "Included" participants
   const unassigned = useMemo(
-    () => participants.filter((p) => !p.GroupType),
+    () => participants.filter((p) => !p.GroupType && p.CriteriaStatus === 'Included'),
     [participants]
   );
   const control = useMemo(
-    () => participants.filter((p) => p.GroupType === 'Controlled'),
+    () => participants.filter((p) => p.GroupType === 'Controlled' && p.CriteriaStatus === 'Included'),
     [participants]
   );
   const study = useMemo(
-    () => participants.filter((p) => p.GroupType === 'Study'),
+    () => participants.filter((p) => p.GroupType === 'Study' && p.CriteriaStatus === 'Included'),
     [participants]
   );
+
+  // Auto-select all unassigned participants when they change
+  useEffect(() => {
+    const unassignedIds = unassigned.map(p => p.ParticipantId);
+    if (unassignedIds.length > 0) {
+      setSelectedIds(unassignedIds);
+      console.log('Auto-selected all unassigned participants:', unassignedIds);
+    }
+  }, [unassigned]);
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) =>
@@ -193,56 +208,89 @@ export default function StudyGroupAssignment() {
   }
 
   const handleAssign = async () => {
-    if (selectedIds.length === 0) {
+    // Assign ALL unassigned participants (not based on selection)
+    const totalUnassigned = unassigned.length;
+    
+    console.log('=== ASSIGN BUTTON CLICKED ===');
+    console.log('Total unassigned participants:', totalUnassigned);
+    console.log('Unassigned participant IDs:', unassigned.map(p => p.ParticipantId));
+    
+    if (totalUnassigned === 0) {
+      console.log('No unassigned participants found');
       Toast.show({
-        type: 'error',
-        text1: 'No Selection',
-        text2: 'Please select participants to assign.',
+        type: 'info',
+        text1: 'No Participants',
+        text2: 'There are no unassigned participants to assign.',
       });
       return;
     }
+    
+    console.log(`Attempting to assign ALL ${totalUnassigned} unassigned participant(s)`);
+    
     try {
       setLoading(true);
 
-      const decisions = await decideGroups(selectedIds);
-
-
+      // Use bulk assignment API to assign ALL unassigned participants
       const requestBody = {
         StudyId: studyId,
         ModifiedBy: userId,
-        MaxParticipants: selectedIds.length,
+        MaxParticipants: totalUnassigned, // Assign ALL unassigned participants
       };
 
+      console.log('=== SENDING API REQUEST ===');
+      console.log('Request body:', JSON.stringify(requestBody, null, 2));
 
       const response = await apiService.post(
         "/BulkUpdateParticipantGroupAssignment",
         requestBody
       );
 
-      console.log("Bulk update response:", response.data);
+      console.log('=== API RESPONSE RECEIVED ===');
+      console.log('Response status:', response.status);
+      console.log('Response data:', JSON.stringify(response.data, null, 2));
 
-      setParticipants((prev) =>
-        prev.map((p) =>
-          decisions.some((d) => d.id === p.ParticipantId)
-            ? {
-              ...p,
-              GroupType:
-                decisions.find((d) => d.id === p.ParticipantId)?.group ?? null,
-            }
-            : p
-        )
-      );
-      setSelectedIds([]);
-      setQuery('');
-      Alert.alert(
-        'Assigned',
-        `Assigned ${decisions.length} participant(s).`
-      );
-    } catch (e) {
-      console.error('Assign error', e);
-      Alert.alert('Error', 'Failed to assign participants. Please try again.');
+      // Check if response indicates success
+      if (response.success || response.status === 200) {
+        console.log('✅ Assignment successful');
+        
+        // Show success message
+        Toast.show({
+          type: 'success',
+          text1: 'Groups Assigned',
+          text2: `Successfully assigned all ${totalUnassigned} participant(s) to groups.`,
+          visibilityTime: 3000,
+        });
+
+        // Refresh the participant list after assignment
+        await fetchParticipants(query);
+        
+        setSelectedIds([]);
+        
+        // Navigate back to participants list to see the updated groups
+        setTimeout(() => {
+          navigation.goBack();
+        }, 1500);
+      } else {
+        console.log('❌ Assignment failed - unexpected response');
+        throw new Error('Unexpected response from server');
+      }
+      
+      console.log('=== ASSIGNMENT COMPLETE ===');
+      
+    } catch (e: any) {
+      console.error('=== ASSIGNMENT ERROR ===');
+      console.error('Error type:', typeof e);
+      console.error('Error message:', e?.message || 'Unknown error');
+      console.error('Full error:', JSON.stringify(e, null, 2));
+      
+      Toast.show({
+        type: 'error',
+        text1: 'Assignment Failed',
+        text2: e?.message || 'Failed to assign participants. Please try again.',
+      });
     } finally {
       setLoading(false);
+      console.log('=== LOADING STATE SET TO FALSE ===');
     }
   };
 
@@ -250,12 +298,32 @@ export default function StudyGroupAssignment() {
   const handleUnassign = async (id: string) => {
     try {
       setLoading(true);
+      
+      console.log(`Unassigning ${id}`);
+
+      // Update local state immediately for better UX
       setParticipants((prev) =>
-        prev.map((p) => (p.ParticipantId === id ? { ...p, GroupType: null } : p))
+        prev.map((p) => (p.ParticipantId === id ? { ...p, GroupType: null, GroupTypeNumber: null } : p))
       );
+      
+      Toast.show({
+        type: 'success',
+        text1: 'Unassigned',
+        text2: `${id} has been unassigned from the group.`,
+      });
+
+      // Refresh the participant list from server
+      await fetchParticipants(query);
+      
     } catch (e) {
       console.error('Unassign error', e);
-      Alert.alert('Error', 'Failed to unassign participant.');
+      Toast.show({
+        type: 'error',
+        text1: 'Unassign Failed',
+        text2: 'Failed to unassign participant. Please try again.',
+      });
+      // Revert the optimistic update on error
+      await fetchParticipants(query);
     } finally {
       setLoading(false);
     }
@@ -401,12 +469,12 @@ export default function StudyGroupAssignment() {
           <View className="items-end mt-4">
             <Pressable
               onPress={handleAssign}
-              disabled={selectedIds.length === 0}
-              className={`py-3 px-6 rounded-xl ${selectedIds.length > 0 ? 'bg-[#0ea06c]' : 'bg-[#b7e6d4]'
+              disabled={unassigned.length === 0}
+              className={`py-3 px-6 rounded-xl ${unassigned.length > 0 ? 'bg-[#0ea06c]' : 'bg-[#b7e6d4]'
                 }`}
             >
               <Text className="text-white text-center font-bold">
-                Assign Group ({selectedIds.length} selected)
+                Assign All ({unassigned.length})
               </Text>
             </Pressable>
           </View>
