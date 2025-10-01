@@ -112,7 +112,7 @@ export default function OrientationTab({
         title="Post VR Assessment"
         subtitle="Collect feedback and evaluate VR session experience"
         onPress={() => 
-          navigation.navigate('PostVRAssessment', { patientId,age,studyId })
+          navigation.navigate('PostVR', { patientId,age,studyId })
         }
         className="bg-[#F6F7F7] border-[#F6F7F7]"
       />

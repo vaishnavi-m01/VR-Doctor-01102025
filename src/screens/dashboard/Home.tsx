@@ -25,7 +25,7 @@ export default function Home({ navigation }: HomeScreenProps) {
 
       <View className="gap-3">
         {NAVIGATION_ITEMS.filter(item => 
-          ['Participants', 'SocioDemographic', 'PatientScreening', 'FactG', 'PreVR', 'PreAndPostVR', 'PostVRAssessment', 'StudyObservation', 'ExitInterview'].includes(item.route)
+          ['Participants', 'SocioDemographic', 'PatientScreening', 'FactG', 'PreVR','PostVR', 'PreAndPostVR', 'PostVRAssessment', 'StudyObservation', 'ExitInterview'].includes(item.route)
         ).map(({ route, title }) => (
           <Pressable key={route}
             className="bg-white border border-border rounded-xl px-4 py-3 shadow-card"

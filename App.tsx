@@ -53,6 +53,9 @@ import VRSessionsList from './src/screens/vr-sessions/VRSessionsList';
 import SessionDetailsScreen from './src/screens/vr-sessions/SessionDetailsScreen';
 import { UserProvider } from 'src/store/context/UserContext';
 import About from '@screens/auth/About';
+import PostVR from '@screens/assessments/PostVR';
+
+
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -228,6 +231,11 @@ export default function App() {
                       name="PostVRAssessment"
                       component={PostVRAssessment}
                       options={{ headerShown: true, title: "Post VR Questionnaire" }}
+                    />
+                    <Stack.Screen
+                      name="PostVR"
+                      component={PostVR}
+                      options={{ headerShown: true, title: "Post VR Assessment" }}
                     />
                     <Stack.Screen
                       name="PreAndPostVR"

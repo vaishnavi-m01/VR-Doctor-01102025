@@ -6,6 +6,7 @@ export type RootStackParamList = {
   Reports: undefined;
   Profile: undefined;
   PreVR: { patientId: number,age:number,studyId:number };
+   PostVR: { patientId: number,age:number,studyId:number,RandomizationId?: string | number};
   PreVRAssessment: { patientId: number,age:number,studyId:number,RandomizationId?: string | number };
   PostVRAssessment: { patientId: number,age:number,studyId:number,RandomizationId?: string | number};
   PreAndPostVR: { patientId: number,age:number,studyId:number };
