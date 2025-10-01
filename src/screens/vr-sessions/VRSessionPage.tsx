@@ -113,7 +113,7 @@ export default function VRSessionPage() {
         <View className="space-y-4">
           <AssessItem 
             icon="📋"
-            title="Pre VR Questionnaires"
+            title="Pre VR Questionnaire"
             subtitle="Complete pre-session assessments and evaluations"
             onPress={() => navigation.navigate("PreVRAssessment", { patientId, age, studyId,RandomizationId })}
             className="bg-white border border-gray-200 shadow-sm"
@@ -129,7 +129,7 @@ export default function VRSessionPage() {
 
           <AssessItem 
             icon="📋"
-            title="Post VR Questionnaires"
+            title="Post VR Questionnaire"
             subtitle="Complete post-session assessments and evaluations"
             onPress={() => navigation.navigate("PostVRAssessment", { patientId, age, studyId,RandomizationId })}
             className="bg-white border border-gray-200 shadow-sm"

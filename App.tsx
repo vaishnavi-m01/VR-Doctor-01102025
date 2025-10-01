@@ -222,12 +222,12 @@ export default function App() {
                     <Stack.Screen
                       name="PreVRAssessment"
                       component={PreVRAssessment}
-                      options={{ headerShown: true, title: "Pre VR Questionnaires" }}
+                      options={{ headerShown: true, title: "Pre VR Questionnaire" }}
                     />
                     <Stack.Screen
                       name="PostVRAssessment"
                       component={PostVRAssessment}
-                      options={{ headerShown: true, title: "Post VR Questionnaires" }}
+                      options={{ headerShown: true, title: "Post VR Questionnaire" }}
                     />
                     <Stack.Screen
                       name="PreAndPostVR"

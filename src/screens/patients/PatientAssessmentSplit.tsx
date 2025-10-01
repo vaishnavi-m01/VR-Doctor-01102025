@@ -84,6 +84,7 @@ export default function ParticipantAssessmentSplit() {
   const [tab, setTab] = useState('assessment');
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
   const hasLoadedDataRef = useRef<boolean>(false);
+  const [newlyAddedParticipantId, setNewlyAddedParticipantId] = useState<string | null>(null);
 
   const [searchText, setSearchText] = useState('');
   const [appliedSearchText, setAppliedSearchText] = useState('');
@@ -171,7 +172,29 @@ export default function ParticipantAssessmentSplit() {
   useFocusEffect(
     useCallback(() => {
       const refreshParticipants = async () => {
-        await fetchParticipants(appliedSearchText);
+        const fetchedParticipants = await fetchParticipants(appliedSearchText);
+        
+        // Check for newly added participant
+        const newlyAdded = await AsyncStorage.getItem('newlyAddedParticipantId');
+        if (newlyAdded) {
+          setNewlyAddedParticipantId(newlyAdded);
+          // Convert to number for comparison
+          const numericId = parseInt(newlyAdded, 10);
+          if (!isNaN(numericId)) {
+            // Verify the participant exists in the fetched list
+            const participantExists = fetchedParticipants.some(p => p.ParticipantId === numericId);
+            if (participantExists) {
+              setSelId(numericId);
+              await saveSelectedParticipant(numericId);
+            }
+          }
+          
+          // Clear the newly added flag after 5 seconds
+          setTimeout(async () => {
+            setNewlyAddedParticipantId(null);
+            await AsyncStorage.removeItem('newlyAddedParticipantId');
+          }, 5000);
+        }
       };
       refreshParticipants();
     }, [appliedSearchText])
@@ -774,21 +797,27 @@ export default function ParticipantAssessmentSplit() {
             {loading ? (
               <ActivityIndicator color="#0ea06c" />
             ) : filteredParticipants.length > 0 ? (
-              filteredParticipants.map((p) => (
-                <ListItem
-                  key={p.ParticipantId}
-                  item={{
-                    ...p,
-                    ParticipantId: `${p.ParticipantId}`,
-                    status: p.status as 'ok' | 'pending' | 'alert',
-                    gender: p.gender as 'Male' | 'Female' | 'Other',
-                    groupType: p.groupType,
-                    CriteriaStatus: p.CriteriaStatus
-                  }}
-                  selected={p.ParticipantId === selId}
-                  onPress={() => setSelId(p.ParticipantId)}
-                />
-              ))
+              filteredParticipants.map((p) => {
+                // Compare numeric IDs
+                const isNewlyAdded = newlyAddedParticipantId !== null && 
+                                     parseInt(newlyAddedParticipantId, 10) === p.ParticipantId;
+                return (
+                  <ListItem
+                    key={p.ParticipantId}
+                    item={{
+                      ...p,
+                      ParticipantId: `${p.ParticipantId}`,
+                      status: p.status as 'ok' | 'pending' | 'alert',
+                      gender: p.gender as 'Male' | 'Female' | 'Other',
+                      groupType: p.groupType,
+                      CriteriaStatus: p.CriteriaStatus
+                    }}
+                    selected={p.ParticipantId === selId}
+                    onPress={() => setSelId(p.ParticipantId)}
+                    isNewlyAdded={isNewlyAdded}
+                  />
+                );
+              })
             ) : (
               <View className="flex-1 justify-center items-center mt-10">
                 <Text className="text-gray-500 text-lg">Patient not found</Text>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert } from 'react-native';
 import FormCard from '@components/FormCard';
 import { Field } from '@components/Field';
 import DateField from '@components/DateField';
@@ -286,16 +286,62 @@ export default function PreVRAssessment() {
       const response = await apiService.post('/AddUpdateParticipantPrePostVRSessions', payload);
 
       if (response.status === 200) {
+        // Check if any answer is "Yes"
+        const hasYesAnswer = preQuestions.some(q => 
+          responses[q.PPVRQMID]?.ScaleValue?.toLowerCase() === 'yes'
+        );
+
         Toast.show({
           type: 'success',
           text1: isUpdate ? 'Updated Successfully' : 'Added Successfully',
           text2: isUpdate
-            ? 'Pre VR Questionnaires updated successfully!'
-            : 'Pre VR Questionnaires added successfully!',
+            ? 'Pre VR Questionnaire updated successfully!'
+            : 'Pre VR Questionnaire added successfully!',
           position: 'top',
-          visibilityTime: 1000,
-          onHide: () => navigation.goBack(),
+          visibilityTime: 1500,
         });
+
+        // Navigate based on answers
+        if (hasYesAnswer) {
+          // Show confirmation popup if any answer is "Yes"
+          setTimeout(() => {
+            Alert.alert(
+              'Continue VR Session?',
+              'Do you want to still continue the VR Session?',
+              [
+                {
+                  text: 'No',
+                  onPress: () => navigation.goBack(),
+                  style: 'cancel'
+                },
+                {
+                  text: 'Yes',
+                  onPress: () => {
+                    navigation.navigate('SessionSetupScreen', {
+                      patientId,
+                      age,
+                      studyId,
+                      RandomizationId,
+                      sessionNo: sessionNo || undefined
+                    });
+                  }
+                }
+              ],
+              { cancelable: false }
+            );
+          }, 1500);
+        } else {
+          // If all answers are "No", navigate directly to VR Session Setup
+          setTimeout(() => {
+            navigation.navigate('SessionSetupScreen', {
+              patientId,
+              age,
+              studyId,
+              RandomizationId,
+              sessionNo: sessionNo || undefined
+            });
+          }, 1500);
+        }
       } else {
         Toast.show({
           type: 'error',

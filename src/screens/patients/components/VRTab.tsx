@@ -19,7 +19,7 @@ const VRTab: React.FC<VRProps> = ({ patientId,age,studyId }) => {
 
             <AssessItem 
                 icon="📋"
-                title="Pre VR Questionnaires"
+                title="Pre VR Questionnaire"
                 onPress={()=>navigation.navigate("PreVRAssessment",{patientId,age,studyId})}
                 className="bg-[#F6F7F7] border-[#F6F7F7]"
             />
@@ -34,7 +34,7 @@ const VRTab: React.FC<VRProps> = ({ patientId,age,studyId }) => {
 
             <AssessItem 
                 icon="📋"
-                title="Post VR Questionnaires"
+                title="Post VR Questionnaire"
                 onPress={()=>navigation.navigate("PostVRAssessment",{patientId,age,studyId})}
                 className="bg-[#F6F7F7] border-[#F6F7F7]"
             />

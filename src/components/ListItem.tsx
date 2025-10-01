@@ -21,13 +21,20 @@ export default function PatientCard({
   item,
   selected,
   onPress,
+  isNewlyAdded,
 }: {
   item: Patient;
   selected?: boolean;
   onPress?: () => void;
+  isNewlyAdded?: boolean;
 }) {
   const baseBgColor = getParticipantBackgroundColor(item.groupType);
-  const chipBg = selected ? 'bg-[#19B888]' : baseBgColor;
+  // Use light green for newly added participants
+  const chipBg = selected 
+    ? 'bg-[#19B888]' 
+    : isNewlyAdded 
+      ? 'bg-[#dcfce7]' 
+      : baseBgColor;
   const iconColor =
     item.status === 'alert'
       ? '#f97316'
@@ -38,7 +45,9 @@ export default function PatientCard({
   return (
     <Pressable
       onPress={onPress}
-      className={`flex-row items-center justify-between rounded-xl px-3 py-3 mb-2 ${chipBg}`}
+      className={`flex-row items-center justify-between rounded-xl px-3 py-3 mb-2 ${chipBg} ${
+        isNewlyAdded ? 'border-2 border-[#16a34a]' : ''
+      }`}
     >
       <View className="flex-row items-center gap-3">
         <Image
@@ -51,9 +60,16 @@ export default function PatientCard({
         />
 
         <View>
-          <Text className={`font-bold ${selected ? 'text-white' : 'text-[#0b1f1c]'}`}>
-            {item.ParticipantId}
-          </Text>
+          <View className="flex-row items-center gap-2">
+            <Text className={`font-bold ${selected ? 'text-white' : 'text-[#0b1f1c]'}`}>
+              {item.ParticipantId}
+            </Text>
+            {isNewlyAdded && (
+              <View className="bg-[#16a34a] px-2 py-0.5 rounded">
+                <Text className="text-white text-xs font-bold">NEW</Text>
+              </View>
+            )}
+          </View>
 
           <Text className={`text-xs ${selected ? 'text-white/90' : 'text-[#6b7a77]'}`}>
             {item.age} • {item.gender}

@@ -16,6 +16,7 @@ import { formatForDB, formatForUI } from 'src/utils/date';
 import { KeyboardAvoidingView, Platform } from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import SignatureModal from '@components/SignatureModal';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 
@@ -373,7 +374,6 @@ export default function SocioDemographic() {
       newErrors.ages = "Age is required";
     }
 
-
     if (!phoneNumber || phoneNumber.trim() === "") {
       newErrors.phoneNumber = "Phone number is required";
     } else if (phoneNumber.length !== 10) {
@@ -386,9 +386,8 @@ export default function SocioDemographic() {
 
     if (!maritalStatus) {
       newErrors.maritalStatus = "Marital status is required";
-    } else if (maritalStatus === "Married" && !numberOfChildren) {
-      newErrors.numberOfChildren = "Number of children is required";
     }
+    // numberOfChildren is now optional - no validation needed
 
     if (!KnowledgeIn) {
       newErrors.KnowledgeIn = "Knowledge field is required";
@@ -425,14 +424,7 @@ export default function SocioDemographic() {
       newErrors.treatmentDuration = "Treatment duration is required";
     }
 
-    if (!otherMedicalConditions) {
-      newErrors.otherMedicalConditions = "otherMedicalConditions is required";
-    }
-
-    if (!currentMedications) {
-      newErrors.currentMedications = "currentMedications is required";
-    }
-
+    // otherMedicalConditions and currentMedications are now optional - no validation needed
 
     lifeStyleData.forEach((habit) => {
       if (!selectedValues[habit.HabitID]) {
@@ -554,6 +546,11 @@ export default function SocioDemographic() {
       const response = await apiService.post("/AddUpdateParticipant", payload);
 
       if (response.status === 200) {
+        // Store newly added participant ID for highlighting (just the numeric ID)
+        if (!isEditMode) {
+          await AsyncStorage.setItem('newlyAddedParticipantId', String(patientId));
+        }
+        
         Toast.show({
           type: "success",
           text1: isEditMode ? 'Updated Successfully' : 'Added Successfully',
@@ -602,8 +599,8 @@ export default function SocioDemographic() {
               Study ID: {studyId || "N/A"}
             </Text>
 
-            <Text className="text-base font-semibold text-gray-700">
-              Age: {age || "Not specified"}
+            <Text className="text-base font-semibold text-green-600">
+              Randomization ID: {groupTypeNumber || randomizationId || "N/A"}
             </Text>
           </View>
         </View>
@@ -614,16 +611,6 @@ export default function SocioDemographic() {
       >
 
         <FormCard icon="👤" title="Section 1: Personal Information">
-          <View className="mt-4">
-            <Field
-              label="Randomization ID"
-              placeholder="Auto-generated"
-              value={groupTypeNumber || randomizationId}
-              editable={false}
-              style={{ backgroundColor: '#f5f5f5', color: '#666' }}
-            />
-          </View>
-
           <View className="mt-4">
             <Field
               label="1. Age"
@@ -641,7 +628,6 @@ export default function SocioDemographic() {
               }}
             />
           </View>
-
 
           <View className="mt-4">
             <Field
@@ -830,7 +816,7 @@ export default function SocioDemographic() {
             {maritalStatus === "Married" && (
               <View className="mt-4">
                 <Field
-                  label="If married, number of children"
+                  label="If married, number of children (Optional)"
                   placeholder="Number of children"
                   value={numberOfChildren}
                   error={errors.numberOfChildren}
@@ -1123,7 +1109,7 @@ export default function SocioDemographic() {
 
           <View className="mt-4">
             <Field
-              label="7. Other Medical Conditions (if any)"
+              label="7. Other Medical Conditions (if any) (Optional)"
               placeholder="_________________________"
               value={otherMedicalConditions}
               error={errors?.otherMedicalConditions}
@@ -1134,7 +1120,7 @@ export default function SocioDemographic() {
 
           <View className="mt-4">
             <Field
-              label="8. Current Medications"
+              label="8. Current Medications (Optional)"
               placeholder="_____________________________________"
               error={errors?.currentMedications}
               value={currentMedications}
