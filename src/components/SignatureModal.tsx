@@ -2,6 +2,10 @@ import React, { useEffect, useRef, useState } from "react";
 import { Modal, View, Text, TouchableOpacity } from "react-native";
 import ExpoDraw from "expo-draw";
 // import { captureRef as takeSnapshotAsync } from 'react-native-view-shot';
+import { Dimensions } from "react-native";
+
+const { width, height } = Dimensions.get("window");
+
 
 
 type SignatureModalProps = {
@@ -11,8 +15,9 @@ type SignatureModalProps = {
   visible: boolean;
   onClose: () => void;
   signatureData: string;
-setSignatureData: (value: string) => void;
+  setSignatureData: (value: string) => void;
 };
+
 
 const SignatureModal: React.FC<SignatureModalProps> = ({
   visible,
@@ -27,6 +32,7 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
   const signatureRef = useRef<any>(null);
   console.log("signatureRef", signatureRef);
   const [showError, setShowError] = useState(!!error);
+
 
   console.log("LABEL", label)
 
@@ -94,8 +100,8 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
           <ExpoDraw
             ref={signatureRef}
             containerStyle={{
-              height: 150,
-              width: "100%",
+              height: height * 0.3,
+              width: width * 0.8,
               borderWidth: 1,
               borderColor: "#dce9e4",
               borderRadius: 12,
@@ -107,6 +113,7 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
             enabled
             initialData={signatureData}
           />
+
 
 
           <View className="flex-row justify-end mt-2 space-x-3">
