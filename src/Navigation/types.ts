@@ -17,7 +17,7 @@ export type RootStackParamList = {
   ExitInterview: { patientId: number,age:number,studyId:number };
   DoctorDashboard: undefined;
   PhysicianDashboard: undefined;
-  VRSessionPage: { patientId: number, age: number, studyId: number, sessionNo?: string, sessionType?: string , RandomizationId?: string | number, Gender?:string,phoneNumber?:string;
+  VRSessionPage: { patientId: number, age: number, studyId: number, sessionNo?: string, sessionType?: string , RandomizationId?: string | number, Gender?:string,phoneNumber?:string; SessionStatus?:string;
 };
   SessionSetupScreen: {patientId?:number,age?:number,studyId?:number,RandomizationId?: string | number,Gender?:string,phoneNumber?:string,sessionNo?:string};
   ParticipantInfo: { patientId: number,age:number,studyId:number };

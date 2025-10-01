@@ -232,7 +232,8 @@ export default function VRSessionsList(props?: VRSessionsListProps) {
         sessionType: session.SessionType,
         RandomizationId,
         Gender,
-        phoneNumber
+        phoneNumber,
+        SessionStatus:session.SessionStatus,
       });
     } catch (err) {
       console.error(' Error navigating to VR Session page:', err);

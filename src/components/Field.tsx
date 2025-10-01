@@ -6,9 +6,10 @@ type FieldProps = {
   error?: string;
   value?: string;
   isEditMode?: boolean;
+  required?: boolean;
 } & TextInputProps;
 
-export function Field({ label, error, value, isEditMode = true, ...props }: FieldProps) {
+export function Field({ label, error, value, isEditMode = true, required = false, ...props }: FieldProps) {
   const [showError, setShowError] = useState(!!error);
 
   // hide error if user types something
@@ -26,6 +27,7 @@ export function Field({ label, error, value, isEditMode = true, ...props }: Fiel
         className={`text-md font-medium  mb-2 ${showError ? "text-red-500" : "text-[#2c4a43]"}`}
       >
         {label}
+       {required && <Text className="text-red-600 ml-1 text-sm">*</Text>}
       </Text>
 
       <TextInput

@@ -93,6 +93,17 @@ export default function SessionControlScreen() {
       const response = await apiService.post("/UpdateParticipantVRSessionMainDetails", payload);
       console.log("response", response?.data)
 
+      const sessionStatus = {
+
+        SessionNo: SessionNo,
+        ParticipantId: patientId,
+        SessionStatus: "Complete",
+        ModifiedBy: userId,
+      }
+
+      
+      const sessionStatusResponse = await apiService.post("/UpdateParticipantVRSessionsStatus", sessionStatus);
+      console.log("response", sessionStatusResponse?.data)
       Toast.show({
         type: 'success',
         text1: 'Session Completed',

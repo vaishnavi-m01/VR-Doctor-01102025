@@ -10,13 +10,13 @@ type VRSessionPageRouteProp = RouteProp<RootStackParamList, 'VRSessionPage'>;
 
 export default function VRSessionPage() {
   console.log('🚀 VRSessionPage component mounted');
-  
+
   const navigation = useNavigation<VRSessionPageNavigationProp>();
   const route = useRoute<VRSessionPageRouteProp>();
-  
-  const { patientId, age, studyId, sessionNo, sessionType,RandomizationId,Gender,phoneNumber } = route.params;
+
+  const { patientId, age, studyId, sessionNo, sessionType, RandomizationId, Gender, phoneNumber, SessionStatus } = route.params;
   // const [randomizationId, setRandomizationId] = useState("");
-  
+
   console.log('🔍 VRSessionPage Debug:');
   console.log('  Route params:', route.params);
   console.log('  PatientId:', patientId);
@@ -24,7 +24,7 @@ export default function VRSessionPage() {
   console.log('  StudyId:', studyId);
   console.log('  SessionNo:', sessionNo);
   console.log('  SessionType:', sessionType);
- 
+
 
   // // Load participant details when screen is focused
   // useFocusEffect(
@@ -42,19 +42,19 @@ export default function VRSessionPage() {
   // const fetchRandomizationId = async (participantIdParam: string) => {
   //   try {
   //     console.log('🔍 VRSessionPage: Fetching participant details for ID:', participantIdParam);
-      
+
   //     const response = await apiService.post<{ ResponseData: any }>('/GetParticipantDetails', {
   //       ParticipantId: participantIdParam,
   //     });
 
   //     console.log('📊 VRSessionPage: Randomization ID API response:', response.data);
   //     console.log('📊 VRSessionPage: Full response:', JSON.stringify(response.data, null, 2));
-      
+
   //     const data = response.data?.ResponseData;
   //     console.log('📋 VRSessionPage: Randomization ID data:', data);
   //     console.log('📋 VRSessionPage: Data type:', typeof data);
   //     console.log('📋 VRSessionPage: Data keys:', data ? Object.keys(data) : 'No data');
-      
+
   //     if (data && data.GroupTypeNumber) {
   //       console.log('✅ VRSessionPage: Setting randomization ID:', data.GroupTypeNumber);
   //       setRandomizationId(data.GroupTypeNumber);
@@ -94,9 +94,16 @@ export default function VRSessionPage() {
                 <Text className="text-base font-semibold text-gray-700">
                   Session No: {sessionNo || "N/A"}
                 </Text>
-                <Text className="text-base font-semibold text-gray-700">
+                {/* <Text className="text-base font-semibold text-gray-700">
                   Age: {age || "Not specified"}
+                </Text> */}
+                <Text className="text-base font-semibold text-gray-700">
+                  Session Status:{" "}
+                  <Text className={SessionStatus === "Complete" ? "text-green-600" : "text-red-600"}>
+                    {SessionStatus || "In Process"}
+                  </Text>
                 </Text>
+
               </View>
 
               {sessionType && (
@@ -111,11 +118,11 @@ export default function VRSessionPage() {
         </View>
 
         <View className="space-y-4">
-          <AssessItem 
+          <AssessItem
             icon="📋"
             title="Pre VR Questionnaire"
             subtitle="Complete pre-session assessments and evaluations"
-            onPress={() => navigation.navigate("PreVRAssessment", { patientId, age, studyId,RandomizationId })}
+            onPress={() => navigation.navigate("PreVRAssessment", { patientId, age, studyId, RandomizationId })}
             className="bg-white border border-gray-200 shadow-sm"
           />
 
@@ -123,15 +130,15 @@ export default function VRSessionPage() {
             icon="🎮"
             title="VR Session Setup"
             subtitle="Configure and initialize VR therapy session parameters"
-            onPress={() => navigation.navigate("SessionSetupScreen", { patientId, age, studyId,RandomizationId,Gender,phoneNumber,sessionNo })}
+            onPress={() => navigation.navigate("SessionSetupScreen", { patientId, age, studyId, RandomizationId, Gender, phoneNumber, sessionNo })}
             className="bg-white border border-gray-200 shadow-sm"
           />
 
-          <AssessItem 
+          <AssessItem
             icon="📋"
             title="Post VR Questionnaire"
             subtitle="Complete post-session assessments and evaluations"
-            onPress={() => navigation.navigate("PostVRAssessment", { patientId, age, studyId,RandomizationId })}
+            onPress={() => navigation.navigate("PostVRAssessment", { patientId, age, studyId, RandomizationId })}
             className="bg-white border border-gray-200 shadow-sm"
           />
 
@@ -139,7 +146,7 @@ export default function VRSessionPage() {
             icon="⚠️"
             title="Adverse Event Reporting Form"
             subtitle="Document and report any adverse events during VR sessions"
-            onPress={() => navigation.navigate("AdverseEventForm", { patientId, age, studyId,RandomizationId })}
+            onPress={() => navigation.navigate("AdverseEventForm", { patientId, age, studyId, RandomizationId })}
             className="bg-white border border-gray-200 shadow-sm"
           />
         </View>

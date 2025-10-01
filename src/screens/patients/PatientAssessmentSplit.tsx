@@ -844,7 +844,7 @@ export default function ParticipantAssessmentSplit() {
             {(() => {
               const tabs = [
                 { key: 'dash', label: 'Dashboard' },
-                { key: 'info', label: 'Registration' },
+                { key: 'info', label: 'Enrollment' },
                 // Only show Orientation tab if participant is in "Study" group
                 ...(sel?.groupType === 'Study' ? [{ key: 'orie', label: 'Orientation' }] : []),
                 // Only show Assessment tab if participant is not null (Study or Controlled)

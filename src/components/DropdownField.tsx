@@ -1,4 +1,4 @@
-import  { useState } from "react";
+import { useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Modal, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -10,6 +10,7 @@ interface DropdownFieldProps {
   onValueChange: (val: string) => void;
   options: DropdownOption[];
   placeholder?: string;
+  required?: boolean;
   error?: string; // Optional error message
 }
 
@@ -20,6 +21,7 @@ export function DropdownField({
   options,
   placeholder,
   error,
+  required = false
 }: DropdownFieldProps) {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -38,6 +40,7 @@ export function DropdownField({
         className={`text-md font-medium mb-2 ${error ? "text-red-500" : "text-[#2c4a43]"}`}
       >
         {label}
+        {required && <Text className="text-red-600 ml-1 text-sm">*</Text>}
       </Text>
 
       {/* Dropdown Button */}

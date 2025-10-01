@@ -400,12 +400,12 @@ export default function SocioDemographic() {
       newErrors.practiceReligion = "Religion practice is required";
     }
 
-    if (!educationLevel) {
-      newErrors.educationLevel = "Education level is required";
-    }
-    if (!employmentStatus) {
-      newErrors.employmentStatus = "Employment status is required";
-    }
+    // if (!educationLevel) {
+    //   newErrors.educationLevel = "Education level is required";
+    // }
+    // if (!employmentStatus) {
+    //   newErrors.employmentStatus = "Employment status is required";
+    // }
 
 
     if (!cancerDiagnosis) {
@@ -550,7 +550,7 @@ export default function SocioDemographic() {
         if (!isEditMode) {
           await AsyncStorage.setItem('newlyAddedParticipantId', String(patientId));
         }
-        
+
         Toast.show({
           type: "success",
           text1: isEditMode ? 'Updated Successfully' : 'Added Successfully',
@@ -600,7 +600,7 @@ export default function SocioDemographic() {
             </Text>
 
             <Text className="text-base font-semibold text-green-600">
-              Randomization ID: {groupTypeNumber || randomizationId || "N/A"}
+              Randomization Number: {groupTypeNumber || randomizationId || "N/A"}
             </Text>
           </View>
         </View>
@@ -614,6 +614,7 @@ export default function SocioDemographic() {
           <View className="mt-4">
             <Field
               label="1. Age"
+              required
               placeholder="__ years"
               value={ages}
               error={errors.ages}
@@ -632,6 +633,7 @@ export default function SocioDemographic() {
           <View className="mt-4">
             <Field
               label="2. Emergency Contact"
+              required
               placeholder="__ emergency contact number"
               value={phoneNumber}
               error={errors.phoneNumber}
@@ -654,7 +656,7 @@ export default function SocioDemographic() {
               className={`text-base font-medium mb-4 ${errors.gender ? "text-red-500" : "text-[#2c4a43]"
                 }`}
             >
-              3. Gender
+              3. Gender <Text className="text-red-600 ml-1 text-sm">*</Text>
             </Text>
 
             <View className="flex-row gap-3">
@@ -738,7 +740,7 @@ export default function SocioDemographic() {
               className={`text-base font-medium mb-4 ${errors.maritalStatus ? "text-red-500" : "text-[#2c4a43]"
                 }`}
             >
-              4. Marital Status
+              4. Marital Status <Text className="text-red-600 ml-1 text-sm">*</Text>
             </Text>
 
             {/* Button Group */}
@@ -833,7 +835,7 @@ export default function SocioDemographic() {
               className={`text-base font-medium mb-4 ${errors.KnowledgeIn ? "text-red-500" : "text-[#2c4a43]"
                 }`}
             >
-              5. Knowledge in
+              5. Knowledge in <Text className="text-red-600 ml-1 text-sm">*</Text>
             </Text>
 
             <View className="flex-row flex-wrap gap-3 ">
@@ -864,7 +866,7 @@ export default function SocioDemographic() {
                   className={`text-base font-medium mb-4 ${errors.faithWellbeing ? "text-red-500" : "text-[#2c4a43]"
                     }`}
                 >
-                  6. Does faith contribute to well-being?
+                  6. Does faith contribute to well-being? <Text className="text-red-600 ml-1 text-sm">*</Text>
                 </Text>
               </View>
               <View className="flex-row gap-3">
@@ -910,7 +912,7 @@ export default function SocioDemographic() {
                 className={`text-base font-medium mb-4 ${errors.practiceReligion ? "text-red-500" : "text-[#2c4a43]"
                   }`}
               >
-                7. Do you practice any religion?
+                7. Do you practice any religion? <Text className="text-red-600 ml-1 text-sm">*</Text>
               </Text>
             </View>
             <View className="flex-row gap-3">
@@ -1024,6 +1026,7 @@ export default function SocioDemographic() {
           <View className="mt-4">
             <DropdownField
               label="1. Cancer Diagnosis"
+              required
               value={cancerDiagnosis}
               placeholder="Select cancer type"
               onValueChange={(val) => {
@@ -1039,7 +1042,7 @@ export default function SocioDemographic() {
 
           <View className="mt-4">
             <Text className={`text-base font-medium mb-4 ${errors.cancerStage ? "text-red-500" : "text-[#2c4a43]"}`}>
-              2. Stage of Cancer
+              2. Stage of Cancer<Text className="text-red-600 ml-1 text-sm">*</Text>
             </Text>
             <Segmented
               options={[
@@ -1059,6 +1062,7 @@ export default function SocioDemographic() {
           <View className="mt-4">
             <Field
               label="3. Grade (ECOG score)"
+              required
               placeholder="________"
               value={ecogScore}
               error={errors.ecogScore}
@@ -1072,7 +1076,7 @@ export default function SocioDemographic() {
 
           <View className="mt-4">
             <Text className={`text-base font-medium mb-4 ${errors.treatmentType ? "text-red-500" : "text-[#2c4a43]"}`}>
-              4. Type of Treatment
+              4. Type of Treatment <Text className="text-red-600 ml-1 text-sm">*</Text>
             </Text>
             <Segmented
               options={[
@@ -1098,6 +1102,7 @@ export default function SocioDemographic() {
             <View className="flex-1">
               <Field
                 label="6. Duration of Treatment (Weeks)"
+                required
                 placeholder="______________ weeks"
                 value={treatmentDuration}
                 error={errors?.treatmentDuration}
@@ -1145,7 +1150,7 @@ export default function SocioDemographic() {
                 <Text
                   className={`text-base font-medium  mb-4 ${hasError ? "text-red-500" : "text-[#2c4a43]"}`}
                 >
-                  {idx + 1}. {config.label}
+                  {idx + 1}. {config.label} <Text className="text-red-600 ml-1 text-sm">*</Text>
                 </Text>
 
                 {/* Options */}
@@ -1203,7 +1208,7 @@ export default function SocioDemographic() {
                 className={`text-base flex-1 ${consentError ? "text-red-500" : "text-[#2c4a43]"
                   }`}
               >
-                I confirm that the information provided is accurate to the best of my knowledge.
+                I confirm that the information provided is accurate to the best of my knowledge. <Text className="text-red-600 ml-1 text-sm">*</Text>
               </Text>
             </View>
 
