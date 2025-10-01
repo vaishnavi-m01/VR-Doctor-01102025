@@ -186,10 +186,14 @@ export default function PatientScreening() {
     }
   };
 
+    // useEffect(() => {
+    //   const participantId = `${routePatientId}`;
+    //   fetchBaselineScores(patientId, `${studyId}`);
+    // }, [routePatientId, studyId, routeObservationId]);
 
   useEffect(() => {
     if (patientId && studyId) {
-      fetchBaselineScores(patientId.toString(), studyId.toString());
+      fetchBaselineScores(patientId, studyId);
     }
   }, [patientId, studyId]);
 
@@ -540,7 +544,7 @@ export default function PatientScreening() {
 
 
                 <ScrollView showsVerticalScrollIndicator={false}>
-                  <FactGForm />
+                  <FactGForm closeFactGModal={closeFactGModal}/>
                 </ScrollView>
 
               </View>
@@ -583,7 +587,7 @@ export default function PatientScreening() {
                 </View>
 
                 <ScrollView showsVerticalScrollIndicator={false}>
-                  <DistressBaselineForm />
+                    <DistressBaselineForm closeDistressBaselineForm={closeDistressBaselineForm} />
                 </ScrollView>
               </View>
 

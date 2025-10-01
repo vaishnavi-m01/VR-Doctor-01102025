@@ -46,7 +46,11 @@ interface SaveScoreRequest {
   PDWSID?: string;
 }
 
-export default function DistressBaselineForm() {
+interface DistressBaselineFormProps {
+  closeDistressBaselineForm: () => void;
+}
+
+export default function DistressBaselineForm({ closeDistressBaselineForm }: DistressBaselineFormProps) {
   const [v, setV] = useState(0); // distress rating 0-10
   const [notes, setNotes] = useState<string>("");
   const [categories, setCategories] = useState<Category[]>([]);
@@ -273,10 +277,9 @@ export default function DistressBaselineForm() {
         text2: isAdd
           ? "Distress thermometer added successfully!"
           : "Distress thermometer updated successfully!",
-        onHide: () => {
-          navigation.goBack();
-          getData(); 
-        },
+         onHide: () => {
+         closeDistressBaselineForm(); 
+        }
       });
     } catch (err: any) {
       console.error("Save error:", err);

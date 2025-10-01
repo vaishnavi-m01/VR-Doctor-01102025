@@ -60,51 +60,67 @@ interface FactGResponse {
 }
 
 
-  const formatTodayDateForAPI = (): string => {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, "0");
-    const dd = String(today.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
-  };
+const formatTodayDateForAPI = (): string => {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
 
-  
-  const formatDate = (dateString: string): string => {
-    // Handle ISO datetime strings like "2025-09-12T12:25:48.000Z"
-    const date = new Date(dateString);
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
-  };
 
-  const convertDateForAPI = (dateString: string): string => {
-    // Convert DD-MM-YYYY to YYYY-MM-DD for API
-    const [day, month, year] = dateString.split("-");
-    return `${year}-${month}-${day}`;
-  };
+const formatDate = (dateString: string): string => {
+  // Handle ISO datetime strings like "2025-09-12T12:25:48.000Z"
+  const date = new Date(dateString);
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+};
 
-  const formatTodayDate = (): string => {
-    const today = new Date();
-    const dd = today.getDate().toString().padStart(2, "0");
-    const mm = (today.getMonth() + 1).toString().padStart(2, "0");
-    const yyyy = today.getFullYear();
-    return `${dd}-${mm}-${yyyy}`;
-  };
+const convertDateForAPI = (dateString: string): string => {
+  // Convert DD-MM-YYYY to YYYY-MM-DD for API
+  const [day, month, year] = dateString.split("-");
+  return `${year}-${month}-${day}`;
+};
 
-  
-const calculateItemScore = (response: number | null): number | null => {
-  if (response === null || response === undefined) return null; 
+const formatTodayDate = (): string => {
+  const today = new Date();
+  const dd = today.getDate().toString().padStart(2, "0");
+  const mm = (today.getMonth() + 1).toString().padStart(2, "0");
+  const yyyy = today.getFullYear();
+  return `${dd}-${mm}-${yyyy}`;
+};
 
-  switch (response) {
-    case 4: return 0;
-    case 3: return 1;
-    case 2: return 2;
-    case 1: return 3;
-    case 0: return 4;
-    default: return null; 
+
+// Handles direct (+) and reverse (-) scoring
+const calculateItemScore = (
+  response: number | null,
+  type: string | undefined
+): number | null => {
+  if (response === null || response === undefined) return null;
+
+  if (type === "-") {
+    switch (response) {
+      case 0: return 4;
+      case 1: return 3;
+      case 2: return 2;
+      case 3: return 1;
+      case 4: return 0;
+      default: return null;
+    }
+  } else { // includes "+" and any other cases
+    switch (response) {
+      case 0: return 0;
+      case 1: return 1;
+      case 2: return 2;
+      case 3: return 3;
+      case 4: return 4;
+      default: return null;
+    }
   }
 };
+
 
 const calculateSubscaleScore = (
   answers: Record<string, number | null>,
@@ -115,23 +131,18 @@ const calculateSubscaleScore = (
 
   items.forEach((item) => {
     const response = answers[item.code];
-    const itemScore = calculateItemScore(response);
+    const itemScore = calculateItemScore(response, item.TypeOfQuestion); 
     if (itemScore !== null) {
       answeredScores.push(itemScore);
     }
   });
 
-  // If no answers, return 0
   if (answeredScores.length === 0 || totalQuestions === 0) return 0;
-
-  // Custom formula:
-  // (sum of answered scores) * (total questions) / (questions answered)
   const sumScores = answeredScores.reduce((acc, val) => acc + val, 0);
   const finalScore = (sumScores * totalQuestions) / answeredScores.length;
-
-  // Final rounded value
   return Math.round(finalScore);
 };
+
 
 const computeScores = (answers: Record<string, number | null>, subscales: Subscale[]): ScoreResults => {
   const getSubscaleScore = (key: string) => {
@@ -205,6 +216,15 @@ export default function EdmontonFactGScreen() {
   };
 
 
+const subscaleScoreMap: Record<string, number> = {
+  "Physical well-being": score.PWB,
+  "Social/Family well-being": score.SWB,
+  "Emotional well-being": score.EWB,
+  "Functional well-being": score.FWB,
+};
+
+
+
   const handleClear = () => {
     setAnswers({});
     setSelectedDate("");
@@ -268,7 +288,7 @@ export default function EdmontonFactGScreen() {
     }
   };
 
-  
+
 
   const fetchFactG = async (dateToUse?: string | null) => {
     try {
@@ -417,7 +437,7 @@ export default function EdmontonFactGScreen() {
   useEffect(() => {
     if (patientId) {
       fetchAvailableDates().then(() => setInitialized(true));
-      setSelectedDate("");           
+      setSelectedDate("");
       setIsDefaultForm(true);
     }
   }, [patientId]);
@@ -438,15 +458,15 @@ export default function EdmontonFactGScreen() {
     const answeredQuestions = Object.entries(answers).filter(([_, v]) => v !== null && v !== undefined).length;
 
     if (answeredQuestions === 0) {
-    Toast.show({
-      type: 'error',
-      text1: 'Validation Error',
-      text2: 'No responses entered. Please fill at least one question.',
-      position: 'top',
-      topOffset: 50,
-    });
+      Toast.show({
+        type: 'error',
+        text1: 'Validation Error',
+        text2: 'No responses entered. Please fill at least one question.',
+        position: 'top',
+        topOffset: 50,
+      });
 
-    setFieldErrors(() => {
+      setFieldErrors(() => {
         // Mark all fields with error because none are answered
         const errors: Record<string, boolean> = {};
         subscales.forEach(scale => {
@@ -459,14 +479,14 @@ export default function EdmontonFactGScreen() {
       return;
     }
 
-      Toast.show({
+    Toast.show({
       type: 'success',
       text1: 'Validation Passed',
       text2: 'At least one question filled.',
       position: 'top',
       topOffset: 50,
     });
-     
+
   };
 
 
@@ -496,7 +516,7 @@ export default function EdmontonFactGScreen() {
       return;
     }
 
-   
+
     setFieldErrors({});
 
     setSaving(true);
@@ -625,7 +645,7 @@ export default function EdmontonFactGScreen() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
     >
       <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
-         <View
+        <View
           style={{
             backgroundColor: "white",
             borderBottomColor: "rgba(229, 231, 235, 1)",
@@ -699,8 +719,8 @@ export default function EdmontonFactGScreen() {
             onPress={() => setShowDateDropdown(false)}
           />
           <View className="absolute top-20 right-6 bg-white border border-gray-200 rounded-lg shadow-lg z-[9999] w-32 max-h-48"
-             style={{ elevation: 10, maxHeight: 80, overflow: 'hidden' }}
-           >
+            style={{ elevation: 10, maxHeight: 80, overflow: 'hidden' }}
+          >
             {!isTodayInAvailableDates && (
               <Pressable
                 className="px-3 py-2 border-b border-gray-100"
@@ -715,10 +735,10 @@ export default function EdmontonFactGScreen() {
               >
                 <Text className="text-sm text-gray-700 font-semibold">New Form</Text>
               </Pressable>
-             )}
-             
+            )}
 
-            <ScrollView style={{ maxHeight: 140}}>
+
+            <ScrollView style={{ maxHeight: 140 }}>
 
               {availableDates.length > 0 ? (
                 availableDates.map((date, index) => (
@@ -746,7 +766,7 @@ export default function EdmontonFactGScreen() {
       )}
 
       {/* <ScrollView style={{ flex: 1, paddingVertical: 5, paddingHorizontal: 16 }}> */}
-      <ScrollView className="flex-1 px-4 bg-bg pb-[400px]" style={{ paddingTop: 5 }}    keyboardShouldPersistTaps="handled">
+      <ScrollView className="flex-1 px-4 bg-bg pb-[400px]" style={{ paddingTop: 5 }} keyboardShouldPersistTaps="handled">
 
         <FormCard icon="F" title="Fact G">
           <View style={{ flexDirection: 'row', gap: 12, marginTop: 6 }}>
@@ -754,7 +774,7 @@ export default function EdmontonFactGScreen() {
               <Field label="Participant ID" placeholder={`Participant ID: ${patientId}`} value={`${patientId}`} onChangeText={() => { }} />
             </View>
             <View style={{ flex: 1 }}>
-              <DateField label="Date" value={formatTodayDate()} onChange={() => {}}  />
+              <DateField label="Date" value={formatTodayDate()} onChange={() => { }} />
             </View>
           </View>
         </FormCard>
@@ -784,6 +804,21 @@ export default function EdmontonFactGScreen() {
             !error &&
             subscales.map((scale) => (
               <FormCard key={scale.key} icon={scale.shortCode} title={scale.label} >
+               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <Text style={{ fontWeight: "400", fontSize: 18 }}> </Text>
+                  <Text style={{
+                    paddingHorizontal: 15,
+                    paddingVertical: 4,
+                    borderRadius: 8,
+                    fontWeight: "700",
+                    fontSize: 14,
+                    backgroundColor: "#0b362c",
+                    color: "white",
+                  }}>
+                    {subscaleScoreMap[scale.key]}
+                  </Text>
+                </View>
+
                 {scale.items.map((item, index) => (
                   <View key={item.code}>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 8 }}>
@@ -797,7 +832,9 @@ export default function EdmontonFactGScreen() {
                       >
                         {index + 1}
                       </Text>
-                      <Text style={{ flex: 1, fontSize: "1rem", color: "#374151" }}>{item.text} {item.TypeOfQuestion === "-" ? " (-)" : ""}</Text>
+                      <Text style={{ flex: 1, fontSize: "1rem", color: "#374151" }}>{item.text}
+                            <Text style={{ color: "#dc2626" }}> {item.TypeOfQuestion === "-" ? "(-)" : ""}</Text>
+                      </Text>
                       <RatingButtons questionCode={item.code} currentValue={answers[item.code] ?? null} />
                     </View>
                     {index < scale.items.length - 1 && <View style={{ borderBottomColor: "#e5e7eb", borderBottomWidth: 1, marginVertical: 8 }} />}
@@ -845,7 +882,7 @@ export default function EdmontonFactGScreen() {
         </Btn>
         <Btn onPress={handleSave}>Save & Close</Btn>
       </BottomBar>
-   </KeyboardAvoidingView>
+    </KeyboardAvoidingView>
 
   );
 }

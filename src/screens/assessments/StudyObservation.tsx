@@ -9,7 +9,7 @@ import { apiService } from 'src/services';
 import FormCard from '@components/FormCard';
 import { Field } from '@components/Field';
 import BottomBar from '@components/BottomBar';
-import { Btn } from '@components/Button';
+import Button, { Btn } from '@components/Button';
 import Chip from '@components/Chip';
 import { PARTICIPANT_RESPONSES } from '../../constants/appConstants';
 import DateField from '@components/DateField';
@@ -163,6 +163,16 @@ const StudyObservation = () => {
 
   const openDistressBaselineForm = () => setShowDistressBaselineForm(true);
   const closeDistressBaselineForm = () => setShowDistressBaselineForm(false);
+
+  //   const closeFactGModal = () => {
+  //   setShowFactGForm(false);
+  //   // Refresh baseline scores after FactG form is closed
+  //   const participantId = `${routePatientId}`;
+  //   fetchBaselineScores(participantId, `${studyId}`);
+  // };
+
+    const openFactGModal = () => setShowFactGForm(true);
+  const closeFactGModal= () => setShowFactGForm(false);
 
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -706,12 +716,7 @@ const StudyObservation = () => {
     }));
   };
 
-  const closeFactGModal = () => {
-    setShowFactGForm(false);
-    // Refresh baseline scores after FactG form is closed
-    const participantId = `${routePatientId}`;
-    fetchBaselineScores(participantId, `${studyId}`);
-  };
+
 
 
   const renderTextField = (sofid: string, label: string, placeholder?: string, multiline = false) => {
@@ -845,7 +850,7 @@ const StudyObservation = () => {
         <FormCard icon="B" title="Baseline Assessment & Scores">
 
           <View className="flex-row gap-3 mb-2">
-            <Pressable className="flex-1 px-4 py-3 bg-[#0ea06c] rounded-lg" onPress={() => setShowFactGForm(true)}>
+            <Pressable className="flex-1 px-4 py-3 bg-[#0ea06c] rounded-lg" onPress={openFactGModal}>
               <Text className="text-sm text-white font-medium text-center">
                 Fact-G scoring 0-108
               </Text>
@@ -921,7 +926,8 @@ const StudyObservation = () => {
 
               {/* Scrollable form */}
               <ScrollView showsVerticalScrollIndicator={false}>
-                <FactGForm />
+                <FactGForm closeFactGModal={closeFactGModal}/>
+              
               </ScrollView>
             </View>
           </View>
@@ -963,7 +969,9 @@ const StudyObservation = () => {
               </View>
       
             <ScrollView showsVerticalScrollIndicator={false}> 
-                <DistressBaselineForm />        
+               
+              <DistressBaselineForm closeDistressBaselineForm={closeDistressBaselineForm} />
+                   
             </ScrollView>
           </View>
           </View>

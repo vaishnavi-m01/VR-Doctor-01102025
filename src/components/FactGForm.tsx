@@ -66,17 +66,35 @@ const convertDateForAPI = (dateString: string): string => {
   return `${year}-${month}-${day}`;
 };
 
-const calculateItemScore = (response: number | null): number | null => {
+
+// Handles direct (+) and reverse (-) scoring
+const calculateItemScore = (
+  response: number | null,
+  type: string | undefined
+): number | null => {
   if (response === null || response === undefined) return null;
-  switch (response) {
-    case 4: return 0;
-    case 3: return 1;
-    case 2: return 2;
-    case 1: return 3;
-    case 0: return 4;
-    default: return null;
+
+  if (type === "-") {
+    switch (response) {
+      case 0: return 4;
+      case 1: return 3;
+      case 2: return 2;
+      case 3: return 1;
+      case 4: return 0;
+      default: return null;
+    }
+  } else { // includes "+" and any other cases
+    switch (response) {
+      case 0: return 0;
+      case 1: return 1;
+      case 2: return 2;
+      case 3: return 3;
+      case 4: return 4;
+      default: return null;
+    }
   }
 };
+
 
 const calculateSubscaleScore = (
   answers: Record<string, number | null>,
@@ -87,19 +105,18 @@ const calculateSubscaleScore = (
 
   items.forEach((item) => {
     const response = answers[item.code];
-    const itemScore = calculateItemScore(response);
+    const itemScore = calculateItemScore(response, item.TypeOfQuestion); 
     if (itemScore !== null) {
       answeredScores.push(itemScore);
     }
   });
 
   if (answeredScores.length === 0 || totalQuestions === 0) return 0;
-
   const sumScores = answeredScores.reduce((acc, val) => acc + val, 0);
   const finalScore = (sumScores * totalQuestions) / answeredScores.length;
-
   return Math.round(finalScore);
 };
+
 
 const computeScores = (answers: Record<string, number | null>, subscales: Subscale[]): ScoreResults => {
   const getSubscaleScore = (key: string) => {
@@ -113,10 +130,22 @@ const computeScores = (answers: Record<string, number | null>, subscales: Subsca
   const FWB = getSubscaleScore("Functional well-being");
   const TOTAL = PWB + SWB + EWB + FWB;
 
-  return { PWB, SWB, EWB, FWB, TOTAL };
+  return {
+    PWB,
+    SWB,
+    EWB,
+    FWB,
+    TOTAL
+  };
 };
 
-export default function FactGForm() {
+interface FactGFormProps {
+  closeFactGModal: () => void;
+}
+
+
+
+  export default function FactGForm({ closeFactGModal }: FactGFormProps) {
   const [answers, setAnswers] = useState<Record<string, number | null>>({});
   const [subscales, setSubscales] = useState<Subscale[]>([]);
   const [loading, setLoading] = useState(false);
@@ -145,6 +174,12 @@ export default function FactGForm() {
     });
   };
 
+    const subscaleScoreMap: Record<string, number> = {
+    "Physical well-being": score.PWB,
+    "Social/Family well-being": score.SWB,
+    "Emotional well-being": score.EWB,
+    "Functional well-being": score.FWB,
+  };
  
 
   const fetchFactG = async () => {
@@ -328,8 +363,12 @@ export default function FactGForm() {
           position: "top",
           topOffset: 50,
           visibilityTime: 1000,
-        });
-        navigation.goBack();
+       
+         onHide: () => {
+        closeFactGModal(); 
+      
+      }
+     });
       } else {
         throw new Error(`Server returned status ${response.status}`);
       }
@@ -348,11 +387,13 @@ export default function FactGForm() {
 
     const handleClear = () => {
     setAnswers({});
-    setSelectedDate("");
-    setSubscales([]);
+    // setSelectedDate("");
+    // setSubscales([]);
     setError(null);
     setFieldErrors({});
   };
+
+  
 
   const RatingButtons = ({
     questionCode,
@@ -475,13 +516,28 @@ export default function FactGForm() {
 
           {subscales.map((scale) => (
             <FormCard key={scale.key} icon={scale.shortCode} title={scale.label}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <Text style={{ fontWeight: "400", fontSize: 18 }}> </Text>
+                <Text style={{
+                  paddingHorizontal: 15,
+                  paddingVertical: 4,
+                  borderRadius: 8,
+                  fontWeight: "700",
+                  fontSize: 14,
+                  backgroundColor: "#0b362c",
+                  color: "white",
+                }}>
+                  {subscaleScoreMap[scale.key]}
+                </Text>
+              </View>
+
               {scale.items.map((item, index) => (
                 <View key={item.code}>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 8 }}>
                     <Text style={{ width: 24, fontWeight: "700", marginLeft: 8 }}>{index + 1}</Text>
-                    <Text style={{ flex: 1, fontSize: 16, color: "#374151" }}>
-                      {item.text} {item.TypeOfQuestion === "-" ? "(-)" : ""}
-                    </Text>
+                      <Text style={{ flex: 1, fontSize: "1rem", color: "#374151" }}>{item.text}
+                            <Text style={{ color: "#dc2626" }}> {item.TypeOfQuestion === "-" ? "(-)" : ""}</Text>
+                      </Text>
                     <RatingButtons questionCode={item.code} currentValue={answers[item.code] ?? null} />
                   </View>
                   {index < scale.items.length - 1 && (
